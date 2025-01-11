@@ -1,6 +1,5 @@
 import requests
 
-
 def all_types_and_methods_test():
     true_method_var = ["get", "post", "put", "delete"]
     # true_method_type_number = 1
