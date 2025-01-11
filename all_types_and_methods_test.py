@@ -2,30 +2,29 @@ import requests
 
 
 def all_types_and_methods_test():
-    true_method_type = ["get", "post", "put", "delete"]
-    true_method_type_number = 1
-
-    while true_method_type_number < 4:
-        true_method = getattr(requests, true_method_type[true_method_type_number])
-        mischieving_method_type = ["GET", "POST", "PUT", "DELETE"]
-        mischieving_method_type_number = 1
-        response = true_method("https://playground.learnqa.ru/ajax/api/compare_query_type",
-                               data={"method": mischieving_method_type[mischieving_method_type_number]})
-        while mischieving_method_type_number < 4:
+    true_method_var = ["get", "post", "put", "delete"]
+    # true_method_type_number = 1
+    for true_method in true_method_var:
+        mischieving_method_var = ["GET", "POST", "PUT", "DELETE"]
+        for mischieving_method in mischieving_method_var:
+            if true_method != "get":
+                data = {"method": mischieving_method}
+                params = None
+            else:
+                data = None
+                params = {"method": mischieving_method}
+                # mischieving_method = "params"
+            method = getattr(requests, true_method)
+            # mischieving_method_type_number = 0
+            response = method("https://playground.learnqa.ru/ajax/api/compare_query_type",
+                              params=params,
+                              data=data)
             print(
-                f"true method type: {true_method_type[true_method_type_number]}, true_method response: {response}, "
+                f"true method type: {true_method}, true_method response: {response}, "
                 f"true_method response.text: {response.text}, "
-                f"mischieving_method_type: {mischieving_method_type[mischieving_method_type_number]}")
+                f"mischieving_method_var: {mischieving_method}")
 
-            mischieving_method_type_number += 1
-        true_method_type_number += 1
-
-        # if type_number !=0:
-        #     data_number = 0
-        #     print(requests.post("https://playground.learnqa.ru/ajax/api/compare_query_type", mischieving_method_type="POST"))
-        # else:
-        #     response_get_type_post_test = requests.post("https://playground.learnqa.ru/ajax/api/compare_query_type",
-        #                                                 mischieving_method_type="POST")
-
+            # mischieving_method_type_number += 1
+        # true_method_type_number += 1
 
 all_types_and_methods_test()
