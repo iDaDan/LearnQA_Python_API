@@ -1,3 +1,6 @@
+import time
+from time import sleep
+
 import requests
 import json
 
@@ -16,15 +19,23 @@ def tokens_test():
     # теребим задачу пока не готова, для этого подставляем кипучий токен, проверяем что status Job is NOT ready
     resp_not_ready=requests.get("https://playground.learnqa.ru/ajax/api/longtime_job", params={"token":token})
     resp_not_ready_text = json.loads(resp_not_ready.text)
+    print(resp_not_ready_text)
     resp_not_ready_fact_status = resp_not_ready_text["status"]
     print(f"{resp_not_ready_fact_status} ?== {correct_status_not_ready}")
     if resp_not_ready_fact_status == correct_status_not_ready:
-        print("Статус не готовности отображается корректно")
+        print("Статус отображается корректно")
     else:
-        print("Статус не готовности отображается НЕ корректно")
+        print("Статус отображается НЕ корректно")
 
     # усыпляем на количество секунд из первого метода, проверяем что status Job is NOT ready
-    resp_result_status = requests.get("https://playground.learnqa.ru/ajax/api/longtime_job")
-
+    time.sleep(seconds_till_end+1)
+    resp_ready=requests.get("https://playground.learnqa.ru/ajax/api/longtime_job", params={"token":token})
+    resp_ready_text = json.loads(resp_ready.text)
+    print(resp_ready_text)
+    resp_ready_fact_status = resp_ready_text["status"]
+    if resp_ready_fact_status == correct_status_ready:
+        print("Статус готовности отображается корректно")
+    else:
+        print("Статус готовности отображается НЕ корректно")
 
 tokens_test()
