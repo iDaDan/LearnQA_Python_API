@@ -19,7 +19,7 @@ class TestHeaders:
                             'Set-Cookie': 'HomeWork=hw_value; expires=Fri, 21-Feb-2025 13:26:23 GMT; Max-Age=2678400; path=/; domain=playground.learnqa.ru; HttpOnly',
                             'Cache-Control': 'max-age=0', 'Expires': 'Tue, 21 Jan 2025 13:26:23 GMT'}
         # Для тестирования теста:
-        #
+        # expected_headers = {'Date': '', 'Cache-Control': '', 'Expires': ''}
         # resp_headers_more_example = {'Date': '',
         #                              'Cache-Control': '', 'Expires': '', 'Bulka': '', 'Palka': ''}
         # resp_headers_less_example = {'Date': '', 'Cache-Control': ''}
