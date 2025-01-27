@@ -10,5 +10,5 @@ class TestCookieValue:
         value = "<RequestsCookieJar[<Cookie HomeWork=hw_value for .playground.learnqb.ru/>]>"
         response = requests.get("https://playground.learnqa.ru/api/homework_cookie")
         resp_cookie= response.cookies
-        print(resp_cookie)
+        print('RESP_COOK',resp_cookie)
         assert str(resp_cookie) == value, "кука приболела (cookie invalid)"

@@ -1,9 +1,6 @@
 import requests
 from lxml import html
 
-payload = {"login":"super_admin", "password":""}
-response = requests.post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework", data=payload)
-cookie_value = response.cookies.get("auth_cookie")
 passwords_list_raw_info = requests.get("https://en.wikipedia.org/wiki/List_of_the_most_common_passwords")
 
 # Полупонятная магия из https://gist.github.com/KotovVitaliy/86ce86538f36b291a48347a2552573ad#gist-pjax-container,
@@ -17,14 +14,25 @@ locator = '//*[contains(text(),"Top 25 most common passwords by year according t
 passwords = tree.xpath(locator)
 
 for password in passwords:
-    print(f"password2{password}")
+    # что за .strip()?
     password = str(password).strip()
-    print(password)
+    print("1: ",password)
+    payload = {"login":"super_admin", "password":f"{password}"}
+    print("2: ", payload)
+    response = requests.post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework", data=payload)
+    cookie_value = response.cookies.get("auth_cookie") #тут вроде как лишняя строка, но она нужна, потому что может прийти несколько кук
+    cookie_try_value = {"auth_cookie": cookie_value}
+    print("response.cookies: ", dict(response.cookies), "cookie_value: ", cookie_value)
+    check_response = requests.get("https://playground.learnqa.ru/ajax/api/check_auth_cookie", params=cookie_value)
+    print("RESP", dict(check_response.cookies))
+    assert check_response == "You are authorized"
+    correct_value = "You are authorized"
+    assert check_response == correct_value, f"wrong password {password}"
+
 
 # passwords_list_cookie_raw_info = passwords_list_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
 # obj = json.loads(str(passwords_list_cookie_raw_info))
 # print(obj)
-
 
 
 #passwords_list = passwords_list_cookie_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
