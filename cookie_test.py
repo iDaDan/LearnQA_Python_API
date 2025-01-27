@@ -16,18 +16,25 @@ passwords = tree.xpath(locator)
 for password in passwords:
     # что за .strip()?
     password = str(password).strip()
-    print("1: ",password)
+    #print("1: ",password)
     payload = {"login":"super_admin", "password":f"{password}"}
     print("2: ", payload)
     response = requests.post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework", data=payload)
-    cookie_value = response.cookies.get("auth_cookie") #тут вроде как лишняя строка, но она нужна, потому что может прийти несколько кук
-    cookie_try_value = {"auth_cookie": cookie_value}
-    print("response.cookies: ", dict(response.cookies), "cookie_value: ", cookie_value)
-    check_response = requests.get("https://playground.learnqa.ru/ajax/api/check_auth_cookie", params=cookie_value)
-    print("RESP", dict(check_response.cookies))
-    assert check_response == "You are authorized"
-    correct_value = "You are authorized"
-    assert check_response == correct_value, f"wrong password {password}"
+
+    cookie_value = response.cookies.get('auth_cookie') #тут вроде как лишняя строка,
+    # но она нужна, потому что может прийти несколько кук
+    cookie_try_value = {'auth_cookie': cookie_value}
+    str_cookie_value = str(cookie_value)
+
+    #print("response.cookies: ", dict(response.cookies), "cookie_value: ", cookie_value, "cookie_try_value", cookie_try_value)
+    check_response = requests.post("https://playground.learnqa.ru/ajax/api/check_auth_cookie",
+                                   cookies={"auth_cookie": str(cookie_value)})
+    check_response_text = check_response.text
+    #check_response2 = requests.post("https://playground.learnqa.ru/ajax/api/check_auth_cookie",
+                                   #data={"auth_cookie": cookie_value})
+
+    fff = "You are authorized"
+    assert check_response.text != fff,f"OK password {password}"
 
 
 # passwords_list_cookie_raw_info = passwords_list_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
