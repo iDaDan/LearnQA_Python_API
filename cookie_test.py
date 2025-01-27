@@ -1,16 +1,31 @@
-import json
-
 import requests
-from bs4 import BeautifulSoup
+from lxml import html
 
 payload = {"login":"super_admin", "password":""}
 response = requests.post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework", data=payload)
 cookie_value = response.cookies.get("auth_cookie")
-print(cookie_value)
-#cookies = {}
 passwords_list_raw_info = requests.get("https://en.wikipedia.org/wiki/List_of_the_most_common_passwords")
-passwords_list_cookie_raw_info = passwords_list_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
-obj = json.loads(passwords_list_cookie_raw_info)
+
+# Полупонятная магия из https://gist.github.com/KotovVitaliy/86ce86538f36b291a48347a2552573ad#gist-pjax-container,
+# нужно разобраться позже:
+tree = html.fromstring(passwords_list_raw_info.text) #вот это основное, локатор плюс-минус
+
+# локатор, видимо, подходит для всех td[@align="left"]
+# дочерних для [contains(text(),"Top 25 most common passwords by year according to SplashData")]
+# но почему/как passwords сразу складывает их в массив?
+locator = '//*[contains(text(),"Top 25 most common passwords by year according to SplashData")]//..//td[@align="left"]/text()' #Ds
+passwords = tree.xpath(locator)
+
+for password in passwords:
+    print(f"password2{password}")
+    password = str(password).strip()
+    print(password)
+
+# passwords_list_cookie_raw_info = passwords_list_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
+# obj = json.loads(str(passwords_list_cookie_raw_info))
+# print(obj)
+
+
 
 #passwords_list = passwords_list_cookie_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
 #soup = BeautifulSoup(passwords_list_raw_info.text)

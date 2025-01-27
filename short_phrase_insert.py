@@ -6,6 +6,6 @@ class TestPhraseLength:
         j = len(phrase)
 
         assert j<15, "phrase is more then 15 characters"
-        # if j < 15:
+           # if j < 15:
         #     print(f"phrase lenh")
         # else:
