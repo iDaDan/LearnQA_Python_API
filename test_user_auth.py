@@ -8,7 +8,7 @@ class TestUserAuth:
             'password': '1234'
         }
 
-        response1 = requests.post("http://playground.learnqa.ru/api/user/login", data=data)
+        response1 = requests.post("https://playground.learnqa.ru/api/user/login", data=data)
 
         assert "auth_sid" in response1.cookies, "there is no auth cookie in response"
         assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
@@ -19,7 +19,7 @@ class TestUserAuth:
         user_id_from_auth_method = response1.json()["user_id"]
 
         response2 = requests.get(
-            "http://playground.learnqa.ru/api/user/auth",
+            "https://playground.learnqa.ru/api/user/auth",
             headers={"x-csrf-token": token},
             cookies={"auth_sid": auth_sid}
         )
@@ -48,7 +48,7 @@ class TestUserAuth:
             'password': '1234'
         }
 
-        response1 = requests.post("http://playground.learnqa.ru/api/user/login", data=data)
+        response1 = requests.post("https://playground.learnqa.ru/api/user/login", data=data)
 
         assert "auth_sid" in response1.cookies, "there is no auth cookie in response"
         assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
@@ -59,14 +59,14 @@ class TestUserAuth:
 
         if condition == "no_cookie":
             response2 = requests.get(
-                "http://playground.learnqa.ru/api/user/auth",
+                "https://playground.learnqa.ru/api/user/auth",
                 headers={"x-csrf-token": token}
             )
         else:
             response2 = requests.get(
-                "http://playground.learnqa.ru/api/user/auth",
+                "https://playground.learnqa.ru/api/user/auth",
                 cookies={"auth_sid": auth_sid}
             )
-        assert "user_id" in response2.json, "There is no user id in the second response"
+        assert "user_id" in response2.json(), "There is no user id in the second response"
         user_id_from_check_method = response2.json()["user_id"]
         assert user_id_from_check_method == 0, f"User is authorised with condition {condition}"
