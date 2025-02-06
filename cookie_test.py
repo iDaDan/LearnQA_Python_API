@@ -36,7 +36,6 @@ for password in passwords:
     fff = "You are authorized"
     assert check_response.text != fff,f"OK password {password}"
 
-
 # passwords_list_cookie_raw_info = passwords_list_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
 # obj = json.loads(str(passwords_list_cookie_raw_info))
 # print(obj)
