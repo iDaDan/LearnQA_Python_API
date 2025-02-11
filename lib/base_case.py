@@ -13,11 +13,11 @@ class BaseCase:
         assert headers_name in response.headers, f"Cannot find headers with name {headers_name} in the last response"
         return response.headers[headers_name]
 
-    def get_json_value(self, response: Response, name):
+    def get_json_value(self, response: Response, name, expected_value, error_message):
         try:
             response_as_dict = response.json()
         except json.decoder.JSONDecodeError: #мы делаем это, чтобы получить тип ошибки менно из модуля JSONDecodeError?
             assert False, f"response is not in the JSON format. The response text is '{response.text}'"
-        assert name in response_as_dict, f"response doesn't have key '{name}'"
 
-        return response_as_dict[name]
+        assert name in response_as_dict, f"response doesn't have key '{name}'"
+        assert response_as_dict[name] == expected_value, error_message
