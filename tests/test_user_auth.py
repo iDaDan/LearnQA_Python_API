@@ -1,6 +1,7 @@
 import pytest
 import requests
 from lib.base_case import BaseCase
+from lib.assertions import Assertions
 
 class TestUserAuth(BaseCase):
     exclude_params = [
@@ -25,6 +26,7 @@ class TestUserAuth(BaseCase):
         assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
         assert "user_id" in response1.json(), "there is no user id in the response"
 
+        # как и почему тут self?
         self.auth_sid = response1.cookies.get("auth_sid")
         self.token = response1.headers.get("x-csrf-token")
         self.user_id_from_auth_method = response1.json()["user_id"]
@@ -40,13 +42,20 @@ class TestUserAuth(BaseCase):
 
         response2 = requests.get(
             "https://playground.learnqa.ru/api/user/auth",
-            headers={"x-csrf-token": self.token},
+            headers={"x-csrf-token": self.token}, # как и почему тут self?
             cookies={"auth_sid": self.auth_sid}
         )
 
-        assert "user_id" in response2.json(), "there is no user id in the second response"
-        user_id_from_check_method = response2.json()["user_id"]
-        assert user_id_from_check_method == self.user_id_from_auth_method, "user id from auth method not equal to user id from check method"
+        Assertions.assert_json_value_by_name(
+            response2,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
+
+        # assert "user_id" in response2.json(), "there is no user id in the second response"
+        # user_id_from_check_method = response2.json()["user_id"]
+        # assert user_id_from_check_method == self.user_id_from_auth_method, "user id from auth method not equal to user id from check method"
 
 
     @pytest.mark.parametrize('condition', exclude_params)
@@ -64,6 +73,15 @@ class TestUserAuth(BaseCase):
                 "https://playground.learnqa.ru/api/user/auth",
                 cookies={"auth_sid": self.auth_sid}
             )
-        assert "user_id" in response2.json(), "There is no user id in the second response"
-        user_id_from_check_method = response2.json()["user_id"]
-        assert user_id_from_check_method == 0, f"User is authorised with condition {condition}"
+
+        Assertions.assert_json_value_by_name(
+            response2,
+            "user_id",
+            0,
+            f"User is authorised with condition {condition}"
+        )
+
+
+        # assert "user_id" in response2.json(), "There is no user id in the second response"
+        # user_id_from_check_method = response2.json()["user_id"]
+        # assert user_id_from_check_method == 0, f"User is authorised with condition {condition}"
