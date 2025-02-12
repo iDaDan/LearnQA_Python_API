@@ -1,7 +1,4 @@
-import pytest
 import requests
-
-from main import amount
 
 
 class TestHeaders:
