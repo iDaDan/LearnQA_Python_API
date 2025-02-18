@@ -32,10 +32,9 @@ class TestUserAgent(BaseCase):
         print(f"response_data = {type(response_data)}")
         for name in references:
             if name == "User-Agent":
-                print("heh")
+                user_agent = references[name]
             else:
-                print(response_data[name])
-
+                assert response_data[name] == references[name], f"Для User-Agent {user_agent} Значения {name} не равны. Контрольное: {references[name]}, фактическое: {response_data[name]}"
 
     #response = requests.post("https://playground.learnqa.ru/api/user/login", data=data)
     #response_json = json.loads(response.text)
