@@ -8,13 +8,15 @@ class TestHeaders:
                           'Connection', 'Keep-Alive', 'Server',
                           'Set-Cookie',
                           'Cache-Control', 'Expires'}
-
-    def test_headers(self):
+        
         expected_headers = {'Date': 'Tue, 21 Jan 2025 13:26:23 GMT', 'Content-Type': 'text/html; charset=utf-8',
                             'Content-Length': '0', 'Connection': 'keep-alive', 'Keep-Alive': 'timeout=10',
                             'Server': 'Apache',
                             'Set-Cookie': 'HomeWork=hw_value; expires=Fri, 21-Feb-2025 13:26:23 GMT; Max-Age=2678400; path=/; domain=playground.learnqa.ru; HttpOnly',
                             'Cache-Control': 'max-age=0', 'Expires': 'Tue, 21 Jan 2025 13:26:23 GMT'}
+
+    def test_headers(self, expected_headers=None):
+
         # Для тестирования теста:
         # expected_headers = {'Date': '', 'Cache-Control': '', 'Expires': ''}
         # resp_headers_more_example = {'Date': '',
