@@ -4,6 +4,7 @@ from lib.assertions import Assertions
 
 
 class TestUserGet(BaseCase):
+
     def test_user_details_not_auth(self):
         response = requests.get("https://playground.learnqa.ru/api/user/2")
 
