@@ -23,6 +23,26 @@ class Assertions:
 
         assert name in response_as_dict, f"response JSON doesn't have key {name}"
 
+    def assert_json_has_keys(response: Response, names:list):
+        try:
+            response_as_dict = response.json()
+        except json.JSONDecodeError:
+            # что такое assert False?
+            assert False, f"response is not in JSON format. Response text is '{response.text}'"
+
+        for name in names:
+            assert name in response_as_dict, f"response JSON doesn't have key {name}"
+
+    @staticmethod
+    def assert_json_has_no_key(response: Response, name):
+        try:
+            response_as_dict = response.json()
+        except json.JSONDecodeError:
+            # что такое assert False?
+            assert False, f"response is not in JSON format. Response text is '{response.text}'"
+
+        assert name not in response_as_dict, f"response JSON has unexpected key {name}"
+
     @staticmethod
     def assert_code_status(response: Response, expected_status_code):
         #почему не применяем тут try except?
