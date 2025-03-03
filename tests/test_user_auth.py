@@ -26,11 +26,6 @@ class TestUserAuth(BaseCase):
         assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
         assert "user_id" in response1.json(), "there is no user id in the response"
 
-        # как и почему тут self?
-        self.auth_sid = response1.cookies.get("auth_sid")
-        self.token = response1.headers.get("x-csrf-token")
-        self.user_id_from_auth_method = response1.json()["user_id"]
-
         # переменная exclude_params передается в test_negative_auth_check в качестве параметра,
         # это будет _параметризованный_ тест, в который будут тянуться значения переменной благодаря
         # декоратору @pytest.mark.parametrize('condition', exclude_params)
