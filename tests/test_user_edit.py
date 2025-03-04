@@ -3,7 +3,7 @@ from lib.base_case import BaseCase
 from lib.assertions import Assertions
 
 class TestUserEdit(BaseCase):
-    def edit_just_created_user(self):
+    def test_edit_just_created_user(self):
         #REGISTER
         register_data = self.prepare_registration_data()
         response1 = requests.post("https://playground.learnqa.ru/api/user/", register_data)
@@ -26,5 +26,19 @@ class TestUserEdit(BaseCase):
 
         auth_sid = self.get_cookie(response2, "auth_sid")
         auth_token = self.get_header(response2, "x-csrf-token")
-        user_id_from_auth_method = self.get_json_value(response2,"user_id")
+        user_id_from_auth_method = self.get_json_value(response2, "user_id")
 
+        Assertions.assert_json_value_by_name(response2, "user_id",user_id_from_auth_method,
+                                             "User id from auth method is not equal to user id from check method")
+
+        edited_data = self.prepare_registration_data()
+
+        response3 = requests.put(f"https://playground.learnqa.ru/api/user/{user_id}",
+                                 params = edited_data)
+
+        response4 = requests.get(f"https://playground.learnqa.ru/api/user/{user_id}",
+                                 headers={"x-csrf-token": auth_token},
+                                 cookies= {"auth_sid": auth_sid})
+
+        Assertions.assert_json_value_by_name(response4, "email",
+                                             edited_data["email"], "email from edit data is not equal to user id from check method")

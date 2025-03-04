@@ -56,7 +56,6 @@ class TestUserAuth(BaseCase):
     @pytest.mark.parametrize('condition', exclude_params)
     # здесь мы подключаем exclude_params
     # к ф-и test_negative_auth_check condition - это слово специальное для фреймворка или мы его сами задаём?
-
     def test_negative_auth_check(self, condition):
         if condition == "no_cookie":
             response2 = requests.get(
