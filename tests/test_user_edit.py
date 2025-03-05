@@ -33,12 +33,17 @@ class TestUserEdit(BaseCase):
 
         edited_data = self.prepare_registration_data()
 
-        response3 = requests.put(f"https://playground.learnqa.ru/api/user/{user_id}",
-                                 params = edited_data)
 
+        response3 = requests.put(f"https://playground.learnqa.ru/api/user/{user_id}",
+                                 headers={"x-csrf-token": auth_token},
+                                 cookies={"auth_sid": auth_sid},
+                                 data = edited_data)
+
+        Assertions.assert_code_status(response3, 200)
         response4 = requests.get(f"https://playground.learnqa.ru/api/user/{user_id}",
                                  headers={"x-csrf-token": auth_token},
                                  cookies= {"auth_sid": auth_sid})
 
-        Assertions.assert_json_value_by_name(response4, "email",
-                                             edited_data["email"], "email from edit data is not equal to user id from check method")
+        Assertions.assert_json_value_by_name(response4, "email", edited_data["email"],
+                                             f"email is not edited or edited incorrectly. "
+                                             f"Should be: {edited_data["email"]}. In fact {response4.json()["email"]}")
