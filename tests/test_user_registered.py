@@ -1,12 +1,12 @@
-import requests
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
+from lib.my_requests import MyRequests
 
 class TestUserRegistered(BaseCase):
 
     def test_create_user_successfully(self):
         data = self.prepare_registration_data()
-        response = requests.post("https://playground.learnqa.ru/api/user/", data)
+        response = MyRequests.post("/user/", data)
 
         Assertions.assert_code_status(response, 200)
         Assertions.assert_json_has_key(response, "id")
@@ -15,7 +15,7 @@ class TestUserRegistered(BaseCase):
         email = 'wjjjj@example.com'
         data = self.prepare_registration_data(email)
 
-        response = requests.post("https://playground.learnqa.ru/api/user/", data)
+        response = MyRequests.post("/user/", data)
         content = response.content.decode("utf-8")
 
         Assertions.assert_code_status(response, 400)
