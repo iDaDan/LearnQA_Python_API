@@ -4,11 +4,11 @@ from requests import Response
 
 
 class Logger:
-    file_name = f"logs/log" + str(datetime.datetime.now()) + ".log"
+    file_name = f"logs/log_" + str(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")) + ".log"
 
     @classmethod
     def _write_log_to_file(cls, data: str):
-        with open(cls.file_name, 'a', encoding="utf=8") as logger_file:
+        with open(cls.file_name, 'a', encoding="utf-8") as logger_file:
             logger_file.write(data)
 
     @classmethod
@@ -37,3 +37,5 @@ class Logger:
         data_to_add += f"Response headers {headers_as_dict}\n"
         data_to_add += f"Response cookies {cookies_as_dict}\n"
         data_to_add += f"\n-----\n"
+
+        cls._write_log_to_file(data_to_add)

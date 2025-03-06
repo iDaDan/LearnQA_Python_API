@@ -1,40 +1,42 @@
 import requests
 from lxml import html
 
-passwords_list_raw_info = requests.get("https://en.wikipedia.org/wiki/List_of_the_most_common_passwords")
 
-# Полупонятная магия из https://gist.github.com/KotovVitaliy/86ce86538f36b291a48347a2552573ad#gist-pjax-container,
-# нужно разобраться позже:
-tree = html.fromstring(passwords_list_raw_info.text) #вот это основное, локатор плюс-минус
+def test_cookie():
+    passwords_list_raw_info = requests.get("https://en.wikipedia.org/wiki/List_of_the_most_common_passwords")
 
-# локатор, видимо, подходит для всех td[@align="left"]
-# дочерних для [contains(text(),"Top 25 most common passwords by year according to SplashData")]
-# но почему/как passwords сразу складывает их в массив?
-locator = '//*[contains(text(),"Top 25 most common passwords by year according to SplashData")]//..//td[@align="left"]/text()' #Ds
-passwords = tree.xpath(locator)
+    # Полупонятная магия из https://gist.github.com/KotovVitaliy/86ce86538f36b291a48347a2552573ad#gist-pjax-container,
+    # нужно разобраться позже:
+    tree = html.fromstring(passwords_list_raw_info.text) #вот это основное, локатор плюс-минус
 
-for password in passwords:
-    # что за .strip()?
-    password = str(password).strip()
-    #print("1: ",password)
-    payload = {"login":"super_admin", "password":f"{password}"}
-    print("2: ", payload)
-    response = requests.post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework", data=payload)
+    # локатор, видимо, подходит для всех td[@align="left"]
+    # дочерних для [contains(text(),"Top 25 most common passwords by year according to SplashData")]
+    # но почему/как passwords сразу складывает их в массив?
+    locator = '//*[contains(text(),"Top 25 most common passwords by year according to SplashData")]//..//td[@align="left"]/text()' #Ds
+    passwords = tree.xpath(locator)
 
-    cookie_value = response.cookies.get('auth_cookie') #тут вроде как лишняя строка,
-    # но она нужна, потому что может прийти несколько кук
-    cookie_try_value = {'auth_cookie': cookie_value}
-    str_cookie_value = str(cookie_value)
+    for password in passwords:
+        # что за .strip()?
+        password = str(password).strip()
+        #print("1: ",password)
+        payload = {"login":"super_admin", "password":f"{password}"}
+        print("2: ", payload)
+        response = requests.post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework", data=payload)
 
-    #print("response.cookies: ", dict(response.cookies), "cookie_value: ", cookie_value, "cookie_try_value", cookie_try_value)
-    check_response = requests.post("https://playground.learnqa.ru/ajax/api/check_auth_cookie",
-                                   cookies={"auth_cookie": str(cookie_value)})
-    check_response_text = check_response.text
-    #check_response2 = requests.post("https://playground.learnqa.ru/ajax/api/check_auth_cookie",
-                                   #data={"auth_cookie": cookie_value})
+        cookie_value = response.cookies.get('auth_cookie') #тут вроде как лишняя строка,
+        # но она нужна, потому что может прийти несколько кук
+        cookie_try_value = {'auth_cookie': cookie_value}
+        str_cookie_value = str(cookie_value)
 
-    fff = "You are authorized"
-    assert check_response.text != fff,f"OK password {password}"
+        #print("response.cookies: ", dict(response.cookies), "cookie_value: ", cookie_value, "cookie_try_value", cookie_try_value)
+        check_response = requests.post("https://playground.learnqa.ru/ajax/api/check_auth_cookie",
+                                       cookies={"auth_cookie": str(cookie_value)})
+        check_response_text = check_response.text
+        #check_response2 = requests.post("https://playground.learnqa.ru/ajax/api/check_auth_cookie",
+                                       #data={"auth_cookie": cookie_value})
+
+        fff = "You are authorized"
+        assert check_response_text != fff,f"OK password {password}"
 
 # passwords_list_cookie_raw_info = passwords_list_raw_info.cookies.get("Top 25 most common passwords by year according to SplashData")
 # obj = json.loads(str(passwords_list_cookie_raw_info))
