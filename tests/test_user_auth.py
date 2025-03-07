@@ -34,7 +34,7 @@ class TestUserAuth(BaseCase):
         # чтобы не делать два одинаковых теста с отличием в одну строку
         # она добавляется не в функцию, а отдельно
 
-
+    @allure.description("This test successfully authorize user by email and password")
     def test_auth_user(self):
 
         response2 = MyRequests.get(
@@ -54,7 +54,7 @@ class TestUserAuth(BaseCase):
         # user_id_from_check_method = response2.json()["user_id"]
         # assert user_id_from_check_method == self.user_id_from_auth_method, "user id from auth method not equal to user id from check method"
 
-
+    @allure.description("This test unsuccessfully authorize user without cookie (token or sid)")
     @pytest.mark.parametrize('condition', exclude_params)
     # здесь мы подключаем exclude_params
     # к ф-и test_negative_auth_check condition - это слово специальное для фреймворка или мы его сами задаём?
@@ -76,8 +76,3 @@ class TestUserAuth(BaseCase):
             0,
             f"User is authorised with condition {condition}"
         )
-
-
-        # assert "user_id" in response2.json(), "There is no user id in the second response"
-        # user_id_from_check_method = response2.json()["user_id"]
-        # assert user_id_from_check_method == 0, f"User is authorised with condition {condition}"
