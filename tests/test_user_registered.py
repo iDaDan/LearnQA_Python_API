@@ -1,10 +1,15 @@
+import pytest
+
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
 import allure
-from environment import ENV_OBJECT
+
+
 
 class TestUserRegistered(BaseCase):
+
+    exclude_fields = [("password"),("username"),("firstName"),("lastName"),("email")]
 
     def test_create_user_successfully(self):
         data = self.prepare_registration_data()
@@ -23,6 +28,8 @@ class TestUserRegistered(BaseCase):
         Assertions.assert_code_status(response, 400)
         assert content == f"Users with email '{email}' already exists", f"Unexpected response content"
 
+# Ex15
+
     @allure.description("This test unsuccessfully authorize user by email without @ symbol")
     def test_try_create_user_with_incorrect_email(self):
         email = 'wjjjjexample.com'
@@ -31,3 +38,18 @@ class TestUserRegistered(BaseCase):
         response = MyRequests.post("/user/", data)
         content = response.content.decode("utf-8")
         print(content, "жжжь", response.status_code)
+        Assertions.assert_code_status(response, 400)
+        assert content == f"Invalid email format"
+
+    @allure.description("")
+    @pytest.mark.parametrize("excluded_field", exclude_fields)
+    def test_try_create_user_without_one_field(self, excluded_field):
+        fields = self.prepare_registration_data()
+        if excluded_field is not None:
+            fields[excluded_field] = None
+            response = MyRequests.post("/user/", fields)
+            content = response.content.decode("utf-8")
+            Assertions.assert_code_status(response, 400)
+            assert content == f"The following required params are missed: {excluded_field}"
+
+    #def test_try_create_user_with_one_char_name(self):
