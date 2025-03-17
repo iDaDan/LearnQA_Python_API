@@ -35,5 +35,4 @@ class BaseCase:
             "email": email
         }
         default_data.update(kwargs)
-
         return default_data

@@ -6,15 +6,21 @@ from lib.my_requests import MyRequests
 import allure
 
 
-
 class TestUserRegistered(BaseCase):
 
     exclude_fields = [("password"),("username"),("firstName"),("lastName"),("email")]
 
+    def test_try_create_user_with_edited_field(self, field= None, field_value= None):
+        str_field = str(field)
+        data = self.prepare_registration_data()
+        data[str_field] = field_value
+        response = MyRequests.post("/user/", data)
+        return response
+
     def test_create_user_successfully(self):
         data = self.prepare_registration_data()
+        print(data)
         response = MyRequests.post("/user/", data)
-
         Assertions.assert_code_status(response, 200)
         Assertions.assert_json_has_key(response, "id")
 
@@ -44,21 +50,30 @@ class TestUserRegistered(BaseCase):
     @allure.description("this test try to create user with one empty field")
     @pytest.mark.parametrize("excluded_field", exclude_fields)
     def test_try_create_user_without_one_field(self, excluded_field):
-        fields = self.prepare_registration_data()
-        if excluded_field is not None:
-            fields[excluded_field] = None
-            response = MyRequests.post("/user/", fields)
-            content = response.content.decode("utf-8")
-            Assertions.assert_code_status(response, 400)
-            assert content == f"The following required params are missed: {excluded_field}"
+        response = self.test_try_create_user_with_edited_field(excluded_field)
+        content = response.content.decode("utf-8")
+        Assertions.assert_code_status(response, 400)
+        assert content == f"The following required params are missed: {excluded_field}"
 
+    @allure.description("this test try to create user with too short field that contain one character")
     @pytest.mark.parametrize("excluded_field", exclude_fields)
-    def test_try_create_user_with_one_char_name(self, excluded_field):
+    def test_try_create_user_with_too_short_char_name(self, excluded_field):
         print(f"excluded_field==={excluded_field}")
-        str_excluded_field= str(excluded_field)
-        data = self.prepare_registration_data()
-        data[str_excluded_field] = 'a'
-        response = MyRequests.post("/user/", data)
+        response = self.test_try_create_user_with_edited_field(excluded_field, 'a')
         content = response.content.decode("utf-8")
         Assertions.assert_code_status(response, 400)
         assert content == f"The value of '{excluded_field}' field is too short"
+
+    @allure.description("this test try to create user with too long field that contain 250 characters")
+    @pytest.mark.parametrize("excluded_field", exclude_fields)
+    def test_try_create_user_with_too_long_char_name(self, excluded_field):
+        print(f"excluded_field==={excluded_field}")
+
+        field_value = ('Lorem Ipsum is simply dummy text of the printing and typesetting industry.'
+                                    'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, '
+                                    'when an unknown printer took a galley of type and scrambled it to make a type specimen book. '
+                                    'It has survived not only five centuries.')
+        response = self.test_try_create_user_with_edited_field(excluded_field, field_value)
+        content = response.content.decode("utf-8")
+        Assertions.assert_code_status(response, 400)
+        assert content == f"The value of '{excluded_field}' field is too long"
