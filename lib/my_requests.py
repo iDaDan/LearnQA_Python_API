@@ -53,3 +53,13 @@ class MyRequests():
         Logger.add_response(response)
 
         return response
+
+    @staticmethod
+    def user_auth_get(email, password):
+        data = {
+            'email': email,
+            'password': password
+        }
+
+        response1 = MyRequests.post("/user/login", data=data)
+        return response1
