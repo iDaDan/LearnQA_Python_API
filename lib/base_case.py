@@ -1,6 +1,10 @@
 import json.decoder
 from requests import Response
 from datetime import datetime
+from lib.assertions import Assertions
+import allure
+from lib.my_requests import MyRequests
+
 
 class BaseCase:
     # BaseCase - это наше самостоятельное название файла или часть pytest или другой библиотеки?
@@ -36,3 +40,17 @@ class BaseCase:
         }
         default_data.update(kwargs)
         return default_data
+
+    def user_auth_and_check(self, email, password):
+        response2 = MyRequests.get(
+            "/user/auth",
+            headers={"x-csrf-token": self.token},  # как и почему тут self?
+            cookies={"auth_sid": self.auth_sid}
+        )
+
+        Assertions.assert_json_value_by_name(
+            response2,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
