@@ -24,6 +24,7 @@ class TestUserEdit(BaseCase):
         data_create = self.prepare_registration_data()
         self.email = data_create["email"]
         self.password = data_create["password"]
+        self.firstname = data_create["firstName"]
 
         response_create = MyRequests.post(
             "/user/",
@@ -151,6 +152,71 @@ class TestUserEdit(BaseCase):
         Assertions.assert_json_has_keys(response_after_edit, expected_fields)
         email_after_edit = json.loads(response_after_edit.content)["email"]
         assert email_after_edit == self.email, f"email {self.email} edited to invalid mail:{email_after_edit}"
+
+    def test_edit_just_created_user_short_firstname(self):
+        self.create_user()
+        # LOGIN
+        data = {
+            'email': self.email,
+            'password': self.password
+        }
+        response_login = MyRequests.post("/user/login", data=data)
+
+        self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        self.token = self.get_header(response_login, "x-csrf-token")
+        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        self.user_id_after_auth = self.user_id_from_auth_method
+
+        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
+        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
+        assert "user_id" in response_login.json(), "there is no user id in the response"
+
+        response_auth = MyRequests.get(
+            "/user/auth",
+            headers={"x-csrf-token": self.token},
+            cookies={"auth_sid": self.auth_sid}
+        )
+
+        Assertions.assert_json_value_by_name(
+            response_auth,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
+
+        # GET DATA BEFORE EDIT
+        # лежит в  data_before
+
+        # EDIT
+        invalid_firstname = "a"
+        invalid_firstname_data = {
+            "password": "123",
+            "username": "learnqa",
+            "firstName": invalid_firstname,
+            "lastName": "learnqa",
+            "email": self.email
+        }
+        #Наверно можно заменить на инвалид =
+        #дефолт с заменой емейл
+
+        response_edit = MyRequests.put(
+            f"/user/{self.user_id_after_auth}",
+            headers={"x-csrf-token": self.token},
+            cookies={"auth_sid": self.auth_sid},
+            data=invalid_firstname_data
+        )
+        Assertions.assert_code_status(response_edit, 400)
+
+        # GET INFO AFTER EDIT
+        response_after_edit = MyRequests.get(f"/user/{self.user_id_from_auth_method}",
+                                             headers={"x-csrf-token": self.token},
+                                             cookies={"auth_sid": self.auth_sid})
+
+        expected_fields = ["username", "email", "firstName", "lastName"]
+        Assertions.assert_json_has_keys(response_after_edit, expected_fields)
+        firstname_after_edit = json.loads(response_after_edit.content)["firstName"]
+        assert firstname_after_edit == self.firstname, f"firstname {self.firstname} edited to invalid(short) firstname:{firstname_after_edit}"
+
 
     def test_not_authorised_edit_user(self):
         self.create_user()
