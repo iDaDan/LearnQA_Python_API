@@ -50,11 +50,21 @@ class TestUserDelete(BaseCase):
             cookies={"auth_sid": self.auth_sid}
         )
 
+        Assertions.assert_json_value_by_name(
+            response_auth,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
+
         #Delete
-        "https://playground.learnqa.ru/api/user/{id}"
+
         response_delete = MyRequests.delete("/user/2",
             headers={"x-csrf-token": self.token},
             cookies={"auth_sid": self.auth_sid})
+        print(f"response_delete.status_code: {response_delete.status_code}, response_delete.content: {response_delete.content}")
+        Assertions.assert_code_status(response_delete,400)
+        assert response_delete.text == '{"error":"Please, do not delete test users with ID 1, 2, 3, 4 or 5."}'
 
         #GET ID AFTER DELETE
         resp_get_after_delete = MyRequests.get(
@@ -73,7 +83,99 @@ class TestUserDelete(BaseCase):
 
 
     def test_delete_authorised_user(self):
-        e=2
+        self.create_user()
 
-    def test_try_delete_unauthorised_user(self):
-        e=3
+        # LOGIN
+        data = {
+            'email': self.email,
+            'password': self.password
+        }
+        response_login = MyRequests.post("/user/login", data=data)
+
+        self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        self.token = self.get_header(response_login, "x-csrf-token")
+        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        self.user_id_after_auth = self.user_id_from_auth_method
+
+        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
+        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
+        assert "user_id" in response_login.json(), "there is no user id in the response"
+
+        response_auth = MyRequests.get(
+            "/user/auth",
+            headers={"x-csrf-token": self.token},
+            cookies={"auth_sid": self.auth_sid}
+        )
+
+        Assertions.assert_json_value_by_name(
+            response_auth,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
+
+        #GET STAT CODE
+        response = MyRequests.get(f"/user/{self.user_id_from_auth_method}")
+        Assertions.assert_code_status(response, 200)
+        #DELETE
+        response_delete = MyRequests.delete(f"/user/{self.user_id_from_auth_method}",
+                                            headers={"x-csrf-token": self.token},
+                                            cookies={"auth_sid": self.auth_sid})
+        print(
+            f"response_delete.status_code: {response_delete.status_code}, response_delete.content: {response_delete.content}")
+        Assertions.assert_code_status(response_delete, 200)
+        assert response_delete.text == '{"success":"!"}'
+
+        response = MyRequests.get(f"/user/{self.user_id_from_auth_method}")
+
+        response = MyRequests.get(f"/user/{self.user_id_from_auth_method}")
+        print(response)
+        Assertions.assert_code_status(response,404)
+
+    def test_try_delete_another_user(self):
+        self.create_user()
+
+        # LOGIN
+        data = {
+            'email': self.email,
+            'password': self.password
+        }
+        response_login = MyRequests.post("/user/login", data=data)
+
+        self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        self.token = self.get_header(response_login, "x-csrf-token")
+        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        self.user_id_after_auth = self.user_id_from_auth_method
+
+        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
+        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
+        assert "user_id" in response_login.json(), "there is no user id in the response"
+
+        response_auth = MyRequests.get(
+            "/user/auth",
+            headers={"x-csrf-token": self.token},
+            cookies={"auth_sid": self.auth_sid}
+        )
+
+        Assertions.assert_json_value_by_name(
+            response_auth,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
+
+        # GET STAT CODE
+        response = MyRequests.get(f"/user/{self.user_id_from_auth_method-1}")
+        Assertions.assert_code_status(response, 200)
+
+        # DELETE
+        print(f"self.user_id_from_auth_method: {self.user_id_from_auth_method}")
+        print(f"self.user_id_from_auth_method-1: {self.user_id_from_auth_method-1}")
+        response_delete = MyRequests.delete(f"/user/{self.user_id_from_auth_method-1}",
+                                            headers={"x-csrf-token": self.token},
+                                            cookies={"auth_sid": self.auth_sid})
+        print(
+            f"response_delete.status_code: {response_delete.status_code}, "
+            f"response_delete.content: {response_delete.content}")
+        Assertions.assert_code_status(response_delete, 400)
+        # тут похоже баг
