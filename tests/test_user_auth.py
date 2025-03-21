@@ -11,6 +11,7 @@ class TestUserAuth(BaseCase):
         ('no_token')
     ]
 
+    @allure.description("This test successfully request post /user/login method and preparing auth_sid, token, user_id_from_auth_method")
     def setup_method(self):  # так как мы перенесли данные и ассерты в специальную функцию setup_method(), то к
         # каждой содержащейся в ней переменной нужно добавить "self." слово self здесь обозначает, что переменная
         # является полем класса
@@ -18,7 +19,8 @@ class TestUserAuth(BaseCase):
             'email': 'vinkotov@example.com',
             'password': '1234'
         }
-        response1 = MyRequests.post("/user/login", data=data)
+        with allure.step(f"вызов метода login c data {data}"):
+            response1 = MyRequests.post("/user/login", data=data)
 
         self.auth_sid = self.get_cookie(response1,"auth_sid")
         self.token = self.get_header(response1, "x-csrf-token")
@@ -34,7 +36,7 @@ class TestUserAuth(BaseCase):
         # чтобы не делать два одинаковых теста с отличием в одну строку
         # она добавляется не в функцию, а отдельно
 
-    @allure.description("This test successfully authorize user by email and password")
+    @allure.description("This test successfully authorize user by x-csrf-token and auth_sid from setup_method")
     def test_auth_user(self):
 
         response2 = MyRequests.get(
