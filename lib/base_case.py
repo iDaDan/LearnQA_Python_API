@@ -26,18 +26,64 @@ class BaseCase:
         return response_as_dict[name]
 
     def prepare_registration_data(self, email=None, **kwargs):
-        if email is None:
-            base_part = "learnqa"
-            domain = "example.com"
-            random_part = datetime.now().strftime("%m%d%Y%H%M%S") #что это?
-            email = f"{base_part}{random_part}@{domain}"
-        default_data = {
-            "password": "123",
-            "username": "learnqa",
-            "firstName": "learnqa",
-            "lastName": "learnqa",
-            "email": email
-        }
-        default_data.update(kwargs)
-        return default_data
+        with allure.step("data creation"):
+            if email is None:
+                base_part = "learnqa"
+                domain = "example.com"
+                random_part = datetime.now().strftime("%m%d%Y%H%M%S") #что это?
+                email = f"{base_part}{random_part}@{domain}"
+            default_data = {
+                "password": "123",
+                "username": "learnqa",
+                "firstName": "learnqa",
+                "lastName": "learnqa",
+                "email": email
+            }
+            return default_data
 
+    def create_user_and_check(self, email=None, **kwargs):
+        # CREATE
+        data_create = self.prepare_registration_data(email)
+        self.email = data_create["email"]
+        self.password = data_create["password"]
+        self.firstname = data_create["firstName"]
+
+        response_create = MyRequests.post(
+            "/user/",
+            data_create
+        )
+        Assertions.assert_code_status(response_create, 200)
+        Assertions.assert_json_has_key(response_create, "id")
+        self.user_id_after_auth = response_create.json()["id"]
+
+        data = {
+            'email': self.email,
+            'password': self.password
+        }
+        response_login = MyRequests.post("/user/login", data=data)
+
+        self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        self.token = self.get_header(response_login, "x-csrf-token")
+        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        self.user_id_after_auth = self.user_id_from_auth_method
+
+        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
+        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
+        assert "user_id" in response_login.json(), "there is no user id in the response"
+
+    def create_user_and_check_auth(self, email=None, **kwargs):
+        # CREATE
+        data_create = self.prepare_registration_data()
+        for jopa in data_create:
+            self.jopa = data_create[f"{jopa}"]
+        # self.email = data_create["email"]
+        # self.password = data_create["password"]
+        # self.firstname = data_create["firstName"]
+
+        response_create = MyRequests.post(
+            "/user/",
+            data_create
+        )
+        Assertions.assert_code_status(response_create, 200)
+        Assertions.assert_json_has_key(response_create, "id")
+        self.user_id_after_auth = response_create.json()["id"]

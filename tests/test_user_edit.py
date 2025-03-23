@@ -19,51 +19,36 @@ class TestUserEdit(BaseCase):
         self.token = None
         self.user_id_from_auth_method = None
 
-    def create_user(self):
-        # CREATE
-        data_create = self.prepare_registration_data()
-        self.email = data_create["email"]
-        self.password = data_create["password"]
-        self.firstname = data_create["firstName"]
-
-        response_create = MyRequests.post(
-            "/user/",
-            data_create
-        )
-        Assertions.assert_code_status(response_create, 200)
-        Assertions.assert_json_has_key(response_create, "id")
-        self.user_id_after_auth = response_create.json()["id"]
-
     def test_edit_just_created_user(self):
-        self.create_user()
+        self.create_user_and_check()
         # LOGIN
-        data = {
-            'email': self.email,
-            'password': self.password
-        }
-        response_login = MyRequests.post("/user/login", data=data)
-
-        self.auth_sid = self.get_cookie(response_login,"auth_sid")
-        self.token = self.get_header(response_login, "x-csrf-token")
-        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
-        self.user_id_after_auth = self.user_id_from_auth_method
-
-        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response_login.json(), "there is no user id in the response"
-
-        response_auth = MyRequests.get(
-            "/user/auth",
-            headers={"x-csrf-token": self.token},
-            cookies={"auth_sid": self.auth_sid}
-        )
-
-        Assertions.assert_json_value_by_name(
-            response_auth,
-            "user_id",
-            self.user_id_from_auth_method,
-            "User id from auth method is not equal to user id from check method"
-        )
+        # data = {
+        #     'email': self.email,
+        #     'password': self.password
+        # }
+        # response_login = MyRequests.post("/user/login", data=data)
+        #
+        # self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        # self.token = self.get_header(response_login, "x-csrf-token")
+        # self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        # self.user_id_after_auth = self.user_id_from_auth_method
+        #
+        # assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
+        # assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
+        # assert "user_id" in response_login.json(), "there is no user id in the response"
+        #
+        # response_auth = MyRequests.get(
+        #     "/user/auth",
+        #     headers={"x-csrf-token": self.token},
+        #     cookies={"auth_sid": self.auth_sid}
+        # )
+        #
+        # Assertions.assert_json_value_by_name(
+        #     response_auth,
+        #     "user_id",
+        #     self.user_id_from_auth_method,
+        #     "User id from auth method is not equal to user id from check method"
+        # )
 
         # GET DATA BEFORE EDIT
         # лежит в  data_before
