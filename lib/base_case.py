@@ -24,7 +24,7 @@ class BaseCase:
 
         assert name in response_as_dict, f"response doesn't have key '{name}'"
         return response_as_dict[name]
-
+    @allure.tag("user creation")
     def prepare_registration_data(self, email=None):
         with allure.step(f"data creation with email: {email}"):
             if email is None:
@@ -41,19 +41,37 @@ class BaseCase:
             }
             return default_data
 
+    @allure.tag("user authorisation")
+    def auth_and_check(self, user_id, token, auth_sid):
+        with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"):
+            response2 = MyRequests.get(
+                "/user/auth",
+                headers={"x-csrf-token": token},
+                cookies={"auth_sid": auth_sid}
+            )
+
+        Assertions.assert_json_value_by_name(
+            response2,
+            "user_id",
+            user_id,
+            "User id from auth method is not equal to user id from check method"
+        )
+
+    @allure.tag("user creation")
     def create_user_and_check(self, email=None, **kwargs):
         # CREATE
-        data_create = self.prepare_registration_data(email)
-        email = data_create["email"]
-        password = data_create["password"]
-        firstname = data_create["firstName"]
-        username = data_create["username"]
-        lastname = data_create["lastName"]
-
-        response_create = MyRequests.post(
-            "/user/",
-            data_create
-        )
+        with allure.step("preparing registration data"):
+            data_create = self.prepare_registration_data(email)
+            email = data_create["email"]
+            password = data_create["password"]
+            firstname = data_create["firstName"]
+            username = data_create["username"]
+            lastname = data_create["lastName"]
+        with allure.step("user registration with post /user/ method"):
+            response_create = MyRequests.post(
+                "/user/",
+                data_create
+            )
         Assertions.assert_code_status(response_create, 200)
         Assertions.assert_json_has_key(response_create, "id")
         user_id_after_create = response_create.json()["id"]
@@ -62,28 +80,20 @@ class BaseCase:
             'email': email,
             'password': password
         }
-        response_login = MyRequests.post("/user/login", data=data)
+        with allure.step(f"login by /user/login method with data: {data}"):
+            response_login = MyRequests.post("/user/login", data=data)
 
-        auth_sid = self.get_cookie(response_login, "auth_sid")
-        token = self.get_header(response_login, "x-csrf-token")
-        user_id_after_check = self.get_json_value(response_login, "user_id")
+        with allure.step(f"preparing auth_sid, token, user_id_after_check"):
+            auth_sid = self.get_cookie(response_login, "auth_sid")
+            token = self.get_header(response_login, "x-csrf-token")
+            user_id_after_check = self.get_json_value(response_login, "user_id")
 
         assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
         assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
         assert "user_id" in response_login.json(), "there is no user id in the response"
 
-        response_auth = MyRequests.get(
-            "/user/auth",
-            headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid}
-        )
+        self.auth_and_check(user_id_after_check, token, auth_sid)
 
-        Assertions.assert_json_value_by_name(
-            response_auth,
-            "user_id",
-            user_id_after_check,
-            "User id from auth method is not equal to user id from check method"
-        )
         return {"auth_sid":auth_sid,
                 "password":password,
                 "token":token,
@@ -95,19 +105,3 @@ class BaseCase:
                 "lastname":lastname
                 }
 
-    def create_user_and_check_auth(self, email=None, **kwargs):
-        # CREATE
-        data_create = self.prepare_registration_data()
-        for jopa in data_create:
-            self.jopa = data_create[f"{jopa}"]
-        # self.email = data_create["email"]
-        # self.password = data_create["password"]
-        # self.firstname = data_create["firstName"]
-
-        response_create = MyRequests.post(
-            "/user/",
-            data_create
-        )
-        Assertions.assert_code_status(response_create, 200)
-        Assertions.assert_json_has_key(response_create, "id")
-        self.user_id_after_auth = response_create.json()["id"]

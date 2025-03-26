@@ -1,0 +1,14 @@
+    def auth_and_check(self, user_id, token, auth_sid):
+        with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"):
+            response2 = MyRequests.get(
+                "/user/auth",
+                headers={"x-csrf-token": token},
+                cookies={"auth_sid": auth_sid}
+            )
+
+        Assertions.assert_json_value_by_name(
+            response2,
+            "user_id",
+            user_id,
+            "User id from auth method is not equal to user id from check method"
+        )

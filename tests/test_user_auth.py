@@ -36,21 +36,12 @@ class TestUserAuth(BaseCase):
         # чтобы не делать два одинаковых теста с отличием в одну строку
         # она добавляется не в функцию, а отдельно
 
+
+
     @allure.description("This test successfully authorize user by x-csrf-token and auth_sid from setup_method")
     def test_auth_user(self):
-
-        response2 = MyRequests.get(
-            "/user/auth",
-            headers={"x-csrf-token": self.token}, # как и почему тут self?
-            cookies={"auth_sid": self.auth_sid}
-        )
-
-        Assertions.assert_json_value_by_name(
-            response2,
-            "user_id",
-            self.user_id_from_auth_method,
-            "User id from auth method is not equal to user id from check method"
-        )
+        #with allure.step("")
+        self.auth_and_check(self.user_id_from_auth_method, self.token, self.auth_sid)
 
         # assert "user_id" in response2.json(), "there is no user id in the second response"
         # user_id_from_check_method = response2.json()["user_id"]
