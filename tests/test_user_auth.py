@@ -26,9 +26,7 @@ class TestUserAuth(BaseCase):
         self.token = self.get_header(response1, "x-csrf-token")
         self.user_id_from_auth_method = self.get_json_value(response1, "user_id")
 
-        assert "auth_sid" in response1.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response1.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response1.json(), "there is no user id in the response"
+        Assertions.assert_user_login_results(response1)
 
         # переменная exclude_params передается в test_negative_auth_check в качестве параметра,
         # это будет _параметризованный_ тест, в который будут тянуться значения переменной благодаря

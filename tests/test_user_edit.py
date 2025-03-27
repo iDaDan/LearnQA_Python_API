@@ -1,7 +1,5 @@
 import json
 
-from pkg_resources import invalid_marker
-
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
@@ -10,16 +8,7 @@ from lib.my_requests import MyRequests
 class TestUserEdit(BaseCase):
 
     def setup_method(self):
-    # так как мы перенесли данные и ассерты в специальную функцию setup_method(), то к
-    #     # каждой содержащейся в ней переменной нужно добавить "self." слово self здесь обозначает, что переменная
-    #     # является полем класса
         self.expected_fields = ["username", "email", "firstName", "lastName"]
-    #     self.user_id_after_auth = None
-    #     self.email = None
-    #     self.password = None
-    #     self.auth_sid = None
-    #     self.token = None
-    #     self.user_id_from_auth_method = None
 
     def response_edit(self, user_credentials, operational_data):
         response_edit = MyRequests.put(
@@ -28,8 +17,6 @@ class TestUserEdit(BaseCase):
             cookies={"auth_sid": user_credentials["auth_sid"]},
             data=operational_data
         )
-        print(response_edit.content)
-        print(json.loads(response_edit.content))
         Assertions.assert_code_status(response_edit, 200),
 
     def test_edit_just_created_user(self):
@@ -124,27 +111,14 @@ class TestUserEdit(BaseCase):
         self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
         self.user_id_after_auth = self.user_id_from_auth_method
 
-        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response_login.json(), "there is no user id in the response"
+        Assertions.assert_user_login_results(response_login)
 
-        response_auth = MyRequests.get(
-            "/user/auth",
-            headers={"x-csrf-token": self.token},
-            cookies={"auth_sid": self.auth_sid}
-        )
+        self.auth_and_check(self.user_id_after_auth, self.token, self.auth_sid)
 
         # GET INFO AFTER EDIT
         response_after_edit = MyRequests.get(f"/user/{self.user_id_after_auth}",
                                              headers={"x-csrf-token": self.token},
                                              cookies={"auth_sid": self.auth_sid})
-
-        Assertions.assert_json_value_by_name(
-            response_auth,
-            "user_id",
-            user_credentials["user_id_after_check"],
-            "User id from auth method is not equal to user id from check method"
-        )
 
         print(f"response_after_edit: {response_after_edit.content}")
         email_after_edit = json.loads(response_after_edit.content)["email"]

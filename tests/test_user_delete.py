@@ -26,6 +26,17 @@ class TestUserDelete(BaseCase):
         Assertions.assert_json_has_key(response_create, "id")
         self.user_id_after_auth = response_create.json()["id"]
 
+    def create_second_user(self):
+        data_create = self.prepare_registration_data()
+        response_create = MyRequests.post(
+            "/user/",
+            data_create
+        )
+        Assertions.assert_code_status(response_create, 200)
+        Assertions.assert_json_has_key(response_create, "id")
+        second_id = response_create.json()["id"]
+        return second_id
+
     def test_try_delete_special_authorised_user(self):
         data = {
             'email': 'vinkotov@example.com',
@@ -40,9 +51,7 @@ class TestUserDelete(BaseCase):
         self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
         self.user_id_after_auth = self.user_id_from_auth_method
 
-        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response_login.json(), "there is no user id in the response"
+        Assertions.assert_user_login_results(response_login)
 
         response_auth = MyRequests.get(
             "/user/auth",
@@ -83,8 +92,8 @@ class TestUserDelete(BaseCase):
 
 
     def test_delete_authorised_user(self):
-        self.create_user()
 
+        self.create_user()
         # LOGIN
         data = {
             'email': self.email,
@@ -97,9 +106,7 @@ class TestUserDelete(BaseCase):
         self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
         self.user_id_after_auth = self.user_id_from_auth_method
 
-        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response_login.json(), "there is no user id in the response"
+        Assertions.assert_user_login_results(response_login)
 
         response_auth = MyRequests.get(
             "/user/auth",
@@ -134,6 +141,7 @@ class TestUserDelete(BaseCase):
 
     def test_try_delete_another_user(self):
         self.create_user()
+        second_id= self.create_second_user()
 
         # LOGIN
         data = {
@@ -147,15 +155,16 @@ class TestUserDelete(BaseCase):
         self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
         self.user_id_after_auth = self.user_id_from_auth_method
 
-        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response_login.json(), "there is no user id in the response"
+        Assertions.assert_user_login_results(response_login)
 
         response_auth = MyRequests.get(
             "/user/auth",
             headers={"x-csrf-token": self.token},
             cookies={"auth_sid": self.auth_sid}
         )
+
+        print(f"user_id_from_auth_method: {self.user_id_from_auth_method}")
+        print(f"second id: {second_id}")
 
         Assertions.assert_json_value_by_name(
             response_auth,
@@ -165,17 +174,13 @@ class TestUserDelete(BaseCase):
         )
 
         # GET STAT CODE
-        response = MyRequests.get(f"/user/{self.user_id_from_auth_method-1}")
+        response = MyRequests.get(f"/user/{second_id}")
         Assertions.assert_code_status(response, 200)
 
         # DELETE
-        print(f"self.user_id_from_auth_method: {self.user_id_from_auth_method}")
-        print(f"self.user_id_from_auth_method-1: {self.user_id_from_auth_method-1}")
-        response_delete = MyRequests.delete(f"/user/{self.user_id_from_auth_method-1}",
+        response_delete = MyRequests.delete(f"/user/{second_id}",
                                             headers={"x-csrf-token": self.token},
                                             cookies={"auth_sid": self.auth_sid})
-        print(
-            f"response_delete.status_code: {response_delete.status_code}, "
-            f"response_delete.content: {response_delete.content}")
+
         Assertions.assert_code_status(response_delete, 400)
         # тут похоже баг

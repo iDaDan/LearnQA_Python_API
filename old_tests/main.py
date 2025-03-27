@@ -1,8 +1,6 @@
 
 import requests
 
-from json_parsing import obj
-
 response = requests.get("https://playground.learnqa.ru/api/long_redirect", allow_redirects=True)
 amount = len(response.history)
 last_url = response.history[amount - 2].url

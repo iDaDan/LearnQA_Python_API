@@ -24,6 +24,7 @@ class BaseCase:
 
         assert name in response_as_dict, f"response doesn't have key '{name}'"
         return response_as_dict[name]
+
     @allure.tag("user creation")
     def prepare_registration_data(self, email=None):
         with allure.step(f"data creation with email: {email}"):
@@ -88,9 +89,7 @@ class BaseCase:
             token = self.get_header(response_login, "x-csrf-token")
             user_id_after_check = self.get_json_value(response_login, "user_id")
 
-        assert "auth_sid" in response_login.cookies, "there is no auth cookie in response"
-        assert "x-csrf-token" in response_login.headers, "There is no CSRF token header in the response"
-        assert "user_id" in response_login.json(), "there is no user id in the response"
+        Assertions.assert_user_login_results(response_login)
 
         self.auth_and_check(user_id_after_check, token, auth_sid)
 

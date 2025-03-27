@@ -60,3 +60,10 @@ class Assertions:
         #почему не применяем тут try except?
         assert response.status_code == expected_status_code, \
             f"unexpected status code. Expected {expected_status_code}, Actual {response.status_code}"
+
+    @staticmethod
+    def assert_user_login_results(response: Response):
+        assert "auth_sid" in response.cookies, "there is no auth cookie in response"
+        assert "x-csrf-token" in response.headers, "There is no CSRF token header in the response"
+        assert "user_id" in response.json(), "there is no user id in the response"
+
