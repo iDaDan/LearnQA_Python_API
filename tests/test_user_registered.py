@@ -10,7 +10,7 @@ class TestUserRegistered(BaseCase):
 
     exclude_fields = [("password"),("username"),("firstName"),("lastName"),("email")]
 
-    def test_try_create_user_with_edited_field(self, field= None, field_value= None):
+    def try_create_user_with_edited_field(self, field= None, field_value= None):
         str_field = str(field)
         data = self.prepare_registration_data()
         data[str_field] = field_value
@@ -51,7 +51,7 @@ class TestUserRegistered(BaseCase):
     @allure.description("this test try to create user with one empty field")
     @pytest.mark.parametrize("excluded_field", exclude_fields)
     def test_try_create_user_without_one_field(self, excluded_field):
-        response = self.test_try_create_user_with_edited_field(excluded_field)
+        response = self.try_create_user_with_edited_field(excluded_field)
         content = response.content.decode("utf-8")
         Assertions.assert_code_status(response, 400)
         assert content == f"The following required params are missed: {excluded_field}"
@@ -60,7 +60,7 @@ class TestUserRegistered(BaseCase):
     @pytest.mark.parametrize("excluded_field", exclude_fields)
     def test_try_create_user_with_too_short_char_name(self, excluded_field):
         print(f"excluded_field==={excluded_field}")
-        response = self.test_try_create_user_with_edited_field(excluded_field, 'a')
+        response = self.try_create_user_with_edited_field(excluded_field, 'a')
         content = response.content.decode("utf-8")
         Assertions.assert_code_status(response, 400)
         assert content == f"The value of '{excluded_field}' field is too short"
@@ -74,7 +74,7 @@ class TestUserRegistered(BaseCase):
                                     'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, '
                                     'when an unknown printer took a galley of type and scrambled it to make a type specimen book. '
                                     'It has survived not only five centuries.')
-        response = self.test_try_create_user_with_edited_field(excluded_field, field_value)
+        response = self.try_create_user_with_edited_field(excluded_field, field_value)
         content = response.content.decode("utf-8")
         Assertions.assert_code_status(response, 400)
         assert content == f"The value of '{excluded_field}' field is too long"
