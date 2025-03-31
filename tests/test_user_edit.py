@@ -1,5 +1,5 @@
 import json
-
+import allure
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
@@ -9,6 +9,18 @@ class TestUserEdit(BaseCase):
 
     def setup_method(self):
         self.expected_fields = ["username", "email", "firstName", "lastName"]
+
+    def get_id_second_user(self):
+        data_create = self.prepare_registration_data()
+        response_create = MyRequests.post(
+            "/user/",
+            data_create
+        )
+        Assertions.assert_code_status(response_create, 200)
+        Assertions.assert_json_has_key(response_create, "id")
+        second_id = response_create.json()["id"]
+        return second_id
+
 
     def response_edit(self, user_credentials, operational_data):
         response_edit = MyRequests.put(
@@ -37,6 +49,54 @@ class TestUserEdit(BaseCase):
         email_after_edit = json.loads(response_after_edit.content)["email"]
         print(f"user_credentials: {user_credentials}")
         assert email_after_edit != user_credentials["email"], f"email {user_credentials["email"]} is not edited"
+
+    def test_try_edit_another_user(self):
+        first_user_data = self.create_user_and_check()
+        second_user_data= self.create_user_and_check()
+
+        user_credentials = self.create_user_and_check()
+        default_firstname = user_credentials["firstName"]
+        user_credentials["firstName"] = 'a'
+
+        # LOGIN
+        data = {
+            'email': first_user_data["email"],
+            'password': first_user_data["password"]
+        }
+        response_login = MyRequests.post("/user/login", data=data)
+
+        self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        self.token = self.get_header(response_login, "x-csrf-token")
+        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        self.user_id_after_auth = self.user_id_from_auth_method
+
+        Assertions.assert_user_login_results(response_login)
+
+        response_auth = MyRequests.get(
+            "/user/auth",
+            headers={"x-csrf-token": self.token},
+            cookies={"auth_sid": self.auth_sid}
+        )
+
+        Assertions.assert_json_value_by_name(
+            response_auth,
+            "user_id",
+            self.user_id_from_auth_method,
+            "User id from auth method is not equal to user id from check method"
+        )
+
+        # GET STATUS CODE
+        response = MyRequests.get(f"/user/{first_user_data["user_id_after_check"]}")
+        Assertions.assert_code_status(response, 200)
+
+        # EDIT
+        response_edit = MyRequests.put(f"/user/{second_user_data["user_id_after_check"]}",
+                                            headers={"x-csrf-token": self.token},
+                                            cookies={"auth_sid": self.auth_sid},
+                                       data = edit_data)
+
+        Assertions.assert_code_status(response_edit, 400)
+        # тут похоже баг
 
     def test_edit_just_created_user_invalid_email(self):
         user_credentials= self.create_user_and_check()
