@@ -1,4 +1,6 @@
 import json.decoder
+from tokenize import cookie_re
+
 from requests import Response
 from datetime import datetime
 from lib.assertions import Assertions
@@ -25,7 +27,7 @@ class BaseCase:
         assert name in response_as_dict, f"response doesn't have key '{name}'"
         return response_as_dict[name]
 
-    @allure.tag("user creation")
+    @allure.tag("prepare_registration_data")
     def prepare_registration_data(self, email=None):
         with allure.step(f"data creation with email: {email}"):
             if email is None:
@@ -42,7 +44,7 @@ class BaseCase:
             }
             return default_data
 
-    @allure.tag("user authorisation")
+    @allure.tag("user authorisation and check")
     def auth_and_check(self, user_id, token, auth_sid):
         with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"):
             response2 = MyRequests.get(
@@ -57,6 +59,15 @@ class BaseCase:
             user_id,
             "User id from auth method is not equal to user id from check method"
         )
+
+    def get_from_response_header_cookie_json(self, response:Response, header_name, cookie_name, json_obj_name):
+        cookie_value = self.get_cookie(response, f"{cookie_name}")
+        header_value = self.get_header(response, f"{header_name}")
+        json_obj_value = self.get_json_value(response, f"{json_obj_name}")
+        auth_variables = {f"{cookie_name}":f"{cookie_value}", f"{header_name}":f"{header_value}",f"{json_obj_name}":f"{json_obj_value}"}
+        return auth_variables
+
+
 
     @allure.tag("user creation")
     def create_user_and_check(self, email=None, **kwargs):

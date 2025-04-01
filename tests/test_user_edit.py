@@ -4,11 +4,12 @@ from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
 
-
+@allure.epic("user edit cases")
 class TestUserEdit(BaseCase):
 
     def setup_method(self):
-        self.expected_fields = ["username", "email", "firstName", "lastName"]
+        with allure.step("set expected_fields"):
+            self.expected_fields = ["username", "email", "firstName", "lastName"]
 
     def get_id_second_user(self):
         data_create = self.prepare_registration_data()
@@ -54,9 +55,10 @@ class TestUserEdit(BaseCase):
         first_user_data = self.create_user_and_check()
         second_user_data= self.create_user_and_check()
 
-        user_credentials = self.create_user_and_check()
-        default_firstname = user_credentials["firstName"]
-        user_credentials["firstName"] = 'a'
+        data_for_editing = second_user_data
+        default_firstname = second_user_data["firstName"]
+        data_for_editing["firstName"] = 'EditedFirsName'
+
 
         # LOGIN
         data = {
@@ -64,24 +66,25 @@ class TestUserEdit(BaseCase):
             'password': first_user_data["password"]
         }
         response_login = MyRequests.post("/user/login", data=data)
-
-        self.auth_sid = self.get_cookie(response_login, "auth_sid")
-        self.token = self.get_header(response_login, "x-csrf-token")
-        self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
-        self.user_id_after_auth = self.user_id_from_auth_method
+        auth_var= self.get_from_response_header_cookie_json(response_login, "x-csrf-token",
+                                                            "auth_sid", "user_id")
+        # self.auth_sid = self.get_cookie(response_login, "auth_sid")
+        # self.token = self.get_header(response_login, "x-csrf-token")
+        # self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
+        # self.user_id_after_auth = self.user_id_from_auth_method
 
         Assertions.assert_user_login_results(response_login)
 
         response_auth = MyRequests.get(
             "/user/auth",
-            headers={"x-csrf-token": self.token},
-            cookies={"auth_sid": self.auth_sid}
+            headers={"x-csrf-token": auth_var["x-csrf-token"]},
+            cookies={"auth_sid": auth_var["auth_sid"]}
         )
 
         Assertions.assert_json_value_by_name(
             response_auth,
             "user_id",
-            self.user_id_from_auth_method,
+            auth_var["user_id"],
             "User id from auth method is not equal to user id from check method"
         )
 
@@ -90,10 +93,11 @@ class TestUserEdit(BaseCase):
         Assertions.assert_code_status(response, 200)
 
         # EDIT
+        print(f"data_for_editing {data_for_editing}")
         response_edit = MyRequests.put(f"/user/{second_user_data["user_id_after_check"]}",
                                             headers={"x-csrf-token": self.token},
                                             cookies={"auth_sid": self.auth_sid},
-                                       data = edit_data)
+                                       data = data_for_editing)
 
         Assertions.assert_code_status(response_edit, 400)
         # тут похоже баг
