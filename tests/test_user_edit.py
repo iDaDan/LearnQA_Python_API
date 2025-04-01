@@ -59,7 +59,6 @@ class TestUserEdit(BaseCase):
         default_firstname = second_user_data["firstName"]
         data_for_editing["firstName"] = 'EditedFirsName'
 
-
         # LOGIN
         data = {
             'email': first_user_data["email"],
@@ -68,25 +67,8 @@ class TestUserEdit(BaseCase):
         response_login = MyRequests.post("/user/login", data=data)
         auth_var= self.get_from_response_header_cookie_json(response_login, "x-csrf-token",
                                                             "auth_sid", "user_id")
-        # self.auth_sid = self.get_cookie(response_login, "auth_sid")
-        # self.token = self.get_header(response_login, "x-csrf-token")
-        # self.user_id_from_auth_method = self.get_json_value(response_login, "user_id")
-        # self.user_id_after_auth = self.user_id_from_auth_method
-
         Assertions.assert_user_login_results(response_login)
-
-        response_auth = MyRequests.get(
-            "/user/auth",
-            headers={"x-csrf-token": auth_var["x-csrf-token"]},
-            cookies={"auth_sid": auth_var["auth_sid"]}
-        )
-
-        Assertions.assert_json_value_by_name(
-            response_auth,
-            "user_id",
-            auth_var["user_id"],
-            "User id from auth method is not equal to user id from check method"
-        )
+        self.auth_and_check(auth_var["user_id"], auth_var["x-csrf-token"], auth_var["auth_sid"])
 
         # GET STATUS CODE
         response = MyRequests.get(f"/user/{first_user_data["user_id_after_check"]}")

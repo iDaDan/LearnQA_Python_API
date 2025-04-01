@@ -53,18 +53,21 @@ class BaseCase:
                 cookies={"auth_sid": auth_sid}
             )
 
-        Assertions.assert_json_value_by_name(
-            response2,
-            "user_id",
-            user_id,
-            "User id from auth method is not equal to user id from check method"
-        )
+            Assertions.assert_json_value_by_name(
+                response2, #int
+                "user_id",
+                user_id, #str
+                "User id from auth method is not equal to user id from check method"
+            )
 
     def get_from_response_header_cookie_json(self, response:Response, header_name, cookie_name, json_obj_name):
-        cookie_value = self.get_cookie(response, f"{cookie_name}")
-        header_value = self.get_header(response, f"{header_name}")
-        json_obj_value = self.get_json_value(response, f"{json_obj_name}")
-        auth_variables = {f"{cookie_name}":f"{cookie_value}", f"{header_name}":f"{header_value}",f"{json_obj_name}":f"{json_obj_value}"}
+        cookie_value = self.get_cookie(response, cookie_name)
+        header_value = self.get_header(response, header_name)
+        json_obj_value = self.get_json_value(response, json_obj_name)
+        json_obj_value2 = json_obj_value
+        print(type(json_obj_value))
+        print(type(json_obj_value2))
+        auth_variables = {f"{cookie_name}":f"{cookie_value}", f"{header_name}":f"{header_value}",f"{json_obj_name}":f"{json_obj_value2}"}
         return auth_variables
 
 

@@ -10,6 +10,9 @@ class Assertions:
             # что такое assert False?
             assert False, f"response is not in JSON format. Response text is '{response.text}'"
 
+        print(f"response_as_dict[name]: {response_as_dict[name]}, response_as_dict[name].type: {type(response_as_dict[name])}"
+              f", expected_value: {expected_value}, expected_value.type: {type(expected_value)}")
+
         assert name in response_as_dict, f"response JSON doesn't have key {name}"
         assert response_as_dict[name] == expected_value, error_message
 
