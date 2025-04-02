@@ -55,34 +55,53 @@ class TestUserEdit(BaseCase):
         first_user_data = self.create_user_and_check()
         second_user_data= self.create_user_and_check()
 
-        data_for_editing = second_user_data
-        default_firstname = second_user_data["firstName"]
-        data_for_editing["firstName"] = 'EditedFirsName'
+        firstname_for_editing = {'firstName': 'EditedFirsName'}
 
-        # LOGIN
-        data = {
-            'email': first_user_data["email"],
-            'password': first_user_data["password"]
-        }
-        response_login = MyRequests.post("/user/login", data=data)
+        # LOGIN FIRST USER
+        # data = {
+        #     'email': first_user_data["email"],
+        #     'password': first_user_data["password"]
+        # }
+        response_login = MyRequests.post("/user/login", data=first_user_data)
         auth_var= self.get_from_response_header_cookie_json(response_login, "x-csrf-token",
                                                             "auth_sid", "user_id")
         Assertions.assert_user_login_results(response_login)
         self.auth_and_check(auth_var["user_id"], auth_var["x-csrf-token"], auth_var["auth_sid"])
+
+        #LOGIN SECOND USER
+        # data = {
+        #     'email': second_user_data["email"],
+        #     'password': second_user_data["password"]
+        # }
+        response_second_user_login = MyRequests.post("/user/login", data=second_user_data)
+        auth_var_second_user = self.get_from_response_header_cookie_json(response_second_user_login, "x-csrf-token",
+                                                             "auth_sid", "user_id")
+        Assertions.assert_user_login_results(response_second_user_login)
+        self.auth_and_check(auth_var_second_user["user_id"], auth_var_second_user["x-csrf-token"], auth_var_second_user["auth_sid"])
 
         # GET STATUS CODE
         response = MyRequests.get(f"/user/{first_user_data["user_id_after_check"]}")
         Assertions.assert_code_status(response, 200)
 
         # EDIT
-        print(f"data_for_editing {data_for_editing}")
+        print(f"data_for_editing {firstname_for_editing}")
         response_edit = MyRequests.put(f"/user/{second_user_data["user_id_after_check"]}",
-                                            headers={"x-csrf-token": self.token},
-                                            cookies={"auth_sid": self.auth_sid},
-                                       data = data_for_editing)
+                                            headers={"x-csrf-token": auth_var["x-csrf-token"]},
+                                            cookies={"auth_sid": auth_var["auth_sid"]},
+                                       data = firstname_for_editing)
 
         Assertions.assert_code_status(response_edit, 400)
-        # тут похоже баг
+
+        # GET INFO SECOND USER AFTER EDIT
+        response_after_edit = MyRequests.get(f"/user/{auth_var_second_user["user_id"]}",
+                                             headers={"x-csrf-token": auth_var_second_user["x-csrf-token"]},
+                                             cookies={"auth_sid": auth_var_second_user["auth_sid"]})
+
+        Assertions.assert_json_has_keys(response_after_edit, self.expected_fields)
+        firstname_after_edit = json.loads(response_after_edit.content)["firstName"]
+        print(f"firstname_after_edit {firstname_after_edit}, type firstname_after_edit {type(firstname_after_edit)}, "
+              f"default_firstname:{second_user_data['firstName']}, type default_firstname: {type(second_user_data['firstName'])}")
+        assert firstname_after_edit != second_user_data['firstName'], f"firstName {second_user_data['firstName']} edited to invalid mail:{firstname_after_edit}"
 
     def test_edit_just_created_user_invalid_email(self):
         user_credentials= self.create_user_and_check()
@@ -91,6 +110,8 @@ class TestUserEdit(BaseCase):
         print(f"default_mail={default_mail}")
         invalid_mail = "vjjjyashmelexmple.ru"
         user_credentials["email"] = invalid_mail
+
+        self.response_edit()
 
         response_edit = MyRequests.put(
             f"/user/{user_credentials["user_id_after_check"]}",

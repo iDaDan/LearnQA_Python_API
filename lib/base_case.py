@@ -45,13 +45,14 @@ class BaseCase:
             return default_data
 
     @allure.tag("user authorisation and check")
-    def auth_and_check(self, user_id, token, auth_sid):
-        with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"):
+    def auth_and_check(self, user_id:int, token, auth_sid):
+        with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"): #str
             response2 = MyRequests.get(
                 "/user/auth",
                 headers={"x-csrf-token": token},
                 cookies={"auth_sid": auth_sid}
-            )
+            ) #int
+            print(f"response2: {response2}")
 
             Assertions.assert_json_value_by_name(
                 response2, #int
@@ -65,9 +66,7 @@ class BaseCase:
         header_value = self.get_header(response, header_name)
         json_obj_value = self.get_json_value(response, json_obj_name)
         json_obj_value2 = json_obj_value
-        print(type(json_obj_value))
-        print(type(json_obj_value2))
-        auth_variables = {f"{cookie_name}":f"{cookie_value}", f"{header_name}":f"{header_value}",f"{json_obj_name}":f"{json_obj_value2}"}
+        auth_variables = {f"{cookie_name}":f"{cookie_value}", f"{header_name}":f"{header_value}",f"{json_obj_name}":json_obj_value2}
         return auth_variables
 
 
