@@ -30,13 +30,20 @@ class TestUserEdit(BaseCase):
             cookies={"auth_sid": user_credentials["auth_sid"]},
             data=operational_data
         )
-        Assertions.assert_code_status(response_edit, 200),
+        Assertions.assert_code_status(response_edit, 200)
+
+    def response_edit_4000(self, user_credentials, operational_data):
+        response_edit = MyRequests.put(
+            f"/user/{user_credentials["user_id_after_check"]}",
+            headers={"x-csrf-token": user_credentials["token"]},
+            cookies={"auth_sid": user_credentials["auth_sid"]},
+            data=operational_data
+        )
+        Assertions.assert_code_status(response_edit, 400)
+
 
     def test_edit_just_created_user(self):
-        user_credentials= self.create_user_and_check()
-
-        # GET DATA BEFORE EDIT
-        # лежит в  data_before
+        user_credentials= self.create_user_and_auth()
         # EDIT
         new_data = self.prepare_registration_data()
         self.response_edit(user_credentials,new_data)
@@ -49,62 +56,64 @@ class TestUserEdit(BaseCase):
         Assertions.assert_json_has_keys(response_after_edit, self.expected_fields)
         email_after_edit = json.loads(response_after_edit.content)["email"]
         print(f"user_credentials: {user_credentials}")
-        assert email_after_edit != user_credentials["email"], f"email {user_credentials["email"]} is not edited"
+        assert email_after_edit != user_credentials["email"], \
+            f"email {user_credentials["email"]} is not edited"
 
     def test_try_edit_another_user(self):
-        first_user_data = self.create_user_and_check()
-        second_user_data= self.create_user_and_check()
+        first_user_data = self.create_user_and_login()
+        second_user_data= self.create_user_and_login()
+        firstname_for_editing = {"firstName": "EditedFirsName"}
 
-        firstname_for_editing = {'firstName': 'EditedFirsName'}
+        #авторизация первым пользователем
+        self.auth_and_check(
+            first_user_data["user_id"],
+            first_user_data["x-csrf-token"],
+            first_user_data["auth_sid"])
 
-        # LOGIN FIRST USER
-        # data = {
-        #     'email': first_user_data["email"],
-        #     'password': first_user_data["password"]
-        # }
-        response_login = MyRequests.post("/user/login", data=first_user_data)
-        auth_var= self.get_from_response_header_cookie_json(response_login, "x-csrf-token",
-                                                            "auth_sid", "user_id")
-        Assertions.assert_user_login_results(response_login)
-        self.auth_and_check(auth_var["user_id"], auth_var["x-csrf-token"], auth_var["auth_sid"])
+        # TRY EDIT BEFORE SECOND USER AUTH
+        print(f"data_for_editing {second_user_data["user_id"]}")
+        response_edit1 = MyRequests.put(
+            f"/user/{second_user_data["user_id"]}",
+            headers={"x-csrf-token": first_user_data["x-csrf-token"]},
+            cookies={"auth_sid": first_user_data["auth_sid"]},
+            data=firstname_for_editing
+        )
+        Assertions.assert_code_status(response_edit1, 200)
+        print(
+            f"__response_edit.content__:{response_edit1.content} \n __response_edit.status_code__:{response_edit1.status_code}")
 
-        #LOGIN SECOND USER
-        # data = {
-        #     'email': second_user_data["email"],
-        #     'password': second_user_data["password"]
-        # }
-        response_second_user_login = MyRequests.post("/user/login", data=second_user_data)
-        auth_var_second_user = self.get_from_response_header_cookie_json(response_second_user_login, "x-csrf-token",
-                                                             "auth_sid", "user_id")
-        Assertions.assert_user_login_results(response_second_user_login)
-        self.auth_and_check(auth_var_second_user["user_id"], auth_var_second_user["x-csrf-token"], auth_var_second_user["auth_sid"])
-
-        # GET STATUS CODE
-        response = MyRequests.get(f"/user/{first_user_data["user_id_after_check"]}")
-        Assertions.assert_code_status(response, 200)
+        # SECOND USER AUTH
+        self.auth_and_check(
+            second_user_data["user_id"],
+            second_user_data["x-csrf-token"],
+            second_user_data["auth_sid"])
 
         # EDIT
-        print(f"data_for_editing {firstname_for_editing}")
-        response_edit = MyRequests.put(f"/user/{second_user_data["user_id_after_check"]}",
-                                            headers={"x-csrf-token": auth_var["x-csrf-token"]},
-                                            cookies={"auth_sid": auth_var["auth_sid"]},
-                                       data = firstname_for_editing)
+        print(f"data_for_editing {second_user_data["user_id"]}")
+        response_edit = MyRequests.put(
+            f"/user/{second_user_data["user_id"]}",
+            headers={"x-csrf-token": first_user_data["x-csrf-token"]},
+            cookies={"auth_sid": first_user_data["auth_sid"]},
+            data=firstname_for_editing
+        )
 
-        Assertions.assert_code_status(response_edit, 400)
+        Assertions.assert_code_status(response_edit, 200)
+        print(f"__response_edit.content__:{response_edit.content} \n __response_edit.status_code__:{response_edit.status_code}")
 
         # GET INFO SECOND USER AFTER EDIT
-        response_after_edit = MyRequests.get(f"/user/{auth_var_second_user["user_id"]}",
-                                             headers={"x-csrf-token": auth_var_second_user["x-csrf-token"]},
-                                             cookies={"auth_sid": auth_var_second_user["auth_sid"]})
-
+        response_after_edit = MyRequests.get(
+            f"/user/{second_user_data["user_id"]}",
+            headers={"x-csrf-token": second_user_data["x-csrf-token"]},
+            cookies={"auth_sid": second_user_data["auth_sid"]})
         Assertions.assert_json_has_keys(response_after_edit, self.expected_fields)
+
         firstname_after_edit = json.loads(response_after_edit.content)["firstName"]
-        print(f"firstname_after_edit {firstname_after_edit}, type firstname_after_edit {type(firstname_after_edit)}, "
-              f"default_firstname:{second_user_data['firstName']}, type default_firstname: {type(second_user_data['firstName'])}")
-        assert firstname_after_edit != second_user_data['firstName'], f"firstName {second_user_data['firstName']} edited to invalid mail:{firstname_after_edit}"
+        assert firstname_after_edit == second_user_data['firstName'], \
+            (f"firstName {second_user_data['firstName']} "
+             f"edited to invalid firstName:{firstname_after_edit}")
 
     def test_edit_just_created_user_invalid_email(self):
-        user_credentials= self.create_user_and_check()
+        user_credentials= self.create_user_and_auth()
         # EDIT
         default_mail=user_credentials["email"]
         print(f"default_mail={default_mail}")
@@ -131,7 +140,7 @@ class TestUserEdit(BaseCase):
         assert email_after_edit == default_mail, f"email {default_mail} edited to invalid mail:{email_after_edit}"
 
     def test_edit_just_created_user_short_firstname(self):
-        user_credentials = self.create_user_and_check()
+        user_credentials = self.create_user_and_auth()
         default_firstname = user_credentials["firstName"]
         user_credentials["firstName"] = 'a'
         # EDIT
@@ -155,7 +164,7 @@ class TestUserEdit(BaseCase):
         assert firstname_after_edit == default_firstname, f"firstname {default_firstname} edited to invalid(short) firstname:{firstname_after_edit}"
 
     def test_not_authorised_edit_user(self):
-        user_credentials=self.create_user_and_check()
+        user_credentials=self.create_user_and_auth()
         new_data = self.prepare_registration_data()
 
         response_edit = MyRequests.put(

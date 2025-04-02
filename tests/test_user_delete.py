@@ -11,7 +11,7 @@ class TestUserDelete(BaseCase):
         self.token = None
         self.user_id_from_auth_method = None
 
-    def create_user(self):
+    def create_user_and_login(self):
         # CREATE
         data_create = self.prepare_registration_data()
         self.email = data_create["email"]
@@ -93,7 +93,7 @@ class TestUserDelete(BaseCase):
 
     def test_delete_authorised_user(self):
 
-        self.create_user()
+        self.create_user_and_login()
         # LOGIN
         data = {
             'email': self.email,
@@ -140,7 +140,7 @@ class TestUserDelete(BaseCase):
         Assertions.assert_code_status(response,404)
 
     def test_try_delete_another_user(self):
-        self.create_user()
+        self.create_user_and_login()
         second_id= self.create_second_user()
 
         # LOGIN
