@@ -38,25 +38,15 @@ class TestUserDelete(BaseCase):
 
         Assertions.assert_user_login_results(response_login)
 
-        response_auth = MyRequests.get(
-            "/user/auth",
-            headers={"x-csrf-token": self.token},
-            cookies={"auth_sid": self.auth_sid}
-        )
-
-        Assertions.assert_json_value_by_name(
-            response_auth,
-            "user_id",
-            self.user_id_from_auth_method,
-            "User id from auth method is not equal to user id from check method"
-        )
+        self.auth_and_check(self.user_id_after_auth,
+                            self.token,
+                            self.auth_sid)
 
         #Delete
-
         response_delete = MyRequests.delete("/user/2",
             headers={"x-csrf-token": self.token},
             cookies={"auth_sid": self.auth_sid})
-        print(f"response_delete.status_code: {response_delete.status_code}, response_delete.content: {response_delete.content}")
+
         Assertions.assert_code_status(response_delete,400)
         assert response_delete.text == '{"error":"Please, do not delete test users with ID 1, 2, 3, 4 or 5."}'
 
@@ -73,8 +63,6 @@ class TestUserDelete(BaseCase):
             2,
             f"Special User 2 is deleted"
         )
-
-
 
     def test_delete_authorised_user(self):
 
