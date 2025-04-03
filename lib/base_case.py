@@ -27,7 +27,7 @@ class BaseCase:
         assert name in response_as_dict, f"response doesn't have key '{name}'"
         return response_as_dict[name]
 
-    @allure.tag("prepare_registration_data")
+    @allure.description("prepare_registration_data")
     def prepare_registration_data(self, email=None):
         with allure.step(f"data creation with email: {email}"):
             if email is None:
@@ -44,8 +44,8 @@ class BaseCase:
             }
             return default_data
 
-    @allure.tag("user authorisation and check")
-    def auth_and_check(self, user_id:int, token, auth_sid):
+    @allure.description("user authorisation")
+    def auth_and_check(self, token, auth_sid, user_id: int):
         with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"): #str
             response2 = MyRequests.get(
                 "/user/auth",
@@ -60,9 +60,11 @@ class BaseCase:
                 user_id, #str
                 "User id from auth method is not equal to user id from check method"
             )
+        with allure.step("getting user_id to check"):
             response2 = MyRequests.get(f"/user/{user_id}")
             Assertions.assert_code_status(response2, 200)
 
+    @allure.description("from response get header, cookie, json_obj_name")
     def get_from_response_header_cookie_json(self, response:Response, header_name, cookie_name, json_obj_name):
         cookie_value = self.get_cookie(response, cookie_name)
         header_value = self.get_header(response, header_name)
@@ -72,61 +74,50 @@ class BaseCase:
         Assertions.assert_user_login_results(response)
         return auth_variables
 
-    @allure.tag("user creation")
+    @allure.description("user creation and auth")
     def create_user_and_auth(self, email=None, **kwargs):
         # CREATE
         with allure.step("preparing registration data"):
-            data_create = self.prepare_registration_data(email)
-            email = data_create["email"]
-            password = data_create["password"]
-            firstname = data_create["firstName"]
-            username = data_create["username"]
-            lastname = data_create["lastName"]
+            created_data = self.prepare_registration_data(email)
+
         with allure.step("user registration with post /user/ method"):
             response_create = MyRequests.post(
                 "/user/",
-                data_create
+                created_data
             )
         Assertions.assert_code_status(response_create, 200)
         Assertions.assert_json_has_key(response_create, "id")
         user_id_after_create = response_create.json()["id"]
 
-        data = {
-            'email': email,
-            'password': password
-        }
-        with allure.step(f"login by /user/login method with data: {data}"):
-            response_login = MyRequests.post("/user/login", data=data)
+        with allure.step(f"login by /user/login method with data: {created_data}"):
+            response_login = MyRequests.post("/user/login", data=created_data)
 
         with allure.step(f"preparing auth_sid, token, user_id_after_check"):
-            auth_sid = self.get_cookie(response_login, "auth_sid")
-            token = self.get_header(response_login, "x-csrf-token")
-            user_id_after_check = self.get_json_value(response_login, "user_id")
+            auth_vars=self.get_from_response_header_cookie_json(
+                response_login,
+                "x-csrf-token",
+                "auth_sid",
+                "user_id"
+            )
 
         Assertions.assert_user_login_results(response_login)
 
-        self.auth_and_check(user_id_after_check, token, auth_sid)
+        self.auth_and_check(auth_vars["x-csrf-token"], auth_vars["auth_sid"], auth_vars["user_id"])
 
-        return {"auth_sid":auth_sid,
-                "password":password,
-                "token":token,
-                "user_id_after_create":user_id_after_create,
-                "user_id_after_check": user_id_after_check,
-                "email": email,
-                "firstName":firstname,
-                "username":username,
-                "lastname":lastname
-                }
+        created_data.update(auth_vars)
+
+        # "password": "123",
+        # "username": "learnqa",
+        # "firstName": "learnqa",
+        # "lastName": "learnqa",
+        # "email": email
+
+        return created_data
 
     def create_user_and_login(self, email=None, **kwargs):
         # CREATE
         with allure.step("preparing registration data"):
             data_create = self.prepare_registration_data(email)
-            email = data_create["email"]
-            password = data_create["password"]
-            firstname = data_create["firstName"]
-            username = data_create["username"]
-            lastname = data_create["lastName"]
         with allure.step("user registration with post /user/ method"):
             response_create = MyRequests.post(
                 "/user/",
@@ -136,28 +127,24 @@ class BaseCase:
         Assertions.assert_json_has_key(response_create, "id")
         user_id_after_create = response_create.json()["id"]
 
-        data = {
-            'email': email,
-            'password': password
-        }
-        with allure.step(f"login by /user/login method with data: {data}"):
-            response_login = MyRequests.post("/user/login", data=data)
+        # data = {
+        #     'email': email,
+        #     'password': password
+        # }
+        with allure.step(f"login by /user/login method with data: {data_create}"):
+            response_login = MyRequests.post("/user/login", data=data_create)
 
         with allure.step(f"preparing auth_sid, token, user_id_after_check"):
-            auth_sid = self.get_cookie(response_login, "auth_sid")
-            token = self.get_header(response_login, "x-csrf-token")
-            user_id_after_check = self.get_json_value(response_login, "user_id")
+            auth_variables = self.get_from_response_header_cookie_json(
+                response_login,
+                "x-csrf-token",
+                "auth_sid",
+                "user_id"
+            )
 
         Assertions.assert_user_login_results(response_login)
+        data_create.update(auth_variables)
 
-        return {"auth_sid": auth_sid,
-                "password": password,
-                "x-csrf-token": token,
-                 "user_id": user_id_after_check,
-                "email": email,
-                "firstName": firstname,
-                "username": username,
-                "lastname": lastname
-                }
+        return data_create
 
 

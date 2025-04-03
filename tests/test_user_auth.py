@@ -39,11 +39,7 @@ class TestUserAuth(BaseCase):
     @allure.description("This test successfully authorize user by x-csrf-token and auth_sid from setup_method")
     def test_auth_user(self):
         #with allure.step("")
-        self.auth_and_check(self.user_id_from_auth_method, self.token, self.auth_sid)
-
-        # assert "user_id" in response2.json(), "there is no user id in the second response"
-        # user_id_from_check_method = response2.json()["user_id"]
-        # assert user_id_from_check_method == self.user_id_from_auth_method, "user id from auth method not equal to user id from check method"
+        self.auth_and_check(self.token, self.auth_sid, self.user_id_from_auth_method)
 
     @allure.description("This test unsuccessfully authorize user without cookie (token or sid)")
     @pytest.mark.parametrize('condition', exclude_params)

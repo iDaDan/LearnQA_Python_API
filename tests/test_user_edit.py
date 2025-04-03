@@ -12,24 +12,27 @@ class TestUserEdit(BaseCase):
         with allure.step("set expected_fields"):
             self.expected_fields = ["username", "email", "firstName", "lastName"]
 
+    @allure.description("try to edit user with id")
     def response_edit(self, user_credentials, operational_data):
         response_edit = MyRequests.put(
-            f"/user/{user_credentials["user_id_after_check"]}",
-            headers={"x-csrf-token": user_credentials["token"]},
+            f"/user/{user_credentials["user_id"]}",
+            headers={"x-csrf-token": user_credentials["x-csrf-token"]},
             cookies={"auth_sid": user_credentials["auth_sid"]},
             data=operational_data
         )
         Assertions.assert_code_status(response_edit, 200)
 
+    @allure.description("editing user step, need status code 400")
     def response_edit_400(self, user_credentials, operational_data):
         response_edit = MyRequests.put(
-            f"/user/{user_credentials["user_id_after_check"]}",
-            headers={"x-csrf-token": user_credentials["token"]},
+            f"/user/{user_credentials["user_id"]}",
+            headers={"x-csrf-token": user_credentials["x-csrf-token"]},
             cookies={"auth_sid": user_credentials["auth_sid"]},
             data=operational_data
         )
         Assertions.assert_code_status(response_edit, 400)
 
+    @allure.description("This test editing just created user")
     def test_edit_just_created_user(self):
         user_credentials = self.create_user_and_auth()
         # EDIT
@@ -37,44 +40,38 @@ class TestUserEdit(BaseCase):
         self.response_edit(user_credentials, new_data)
 
         # GET INFO AFTER EDIT
-        response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id_after_check"]}",
-                                             headers={"x-csrf-token": user_credentials["token"]},
+        response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id"]}",
+                                             headers={"x-csrf-token": user_credentials["x-csrf-token"]},
                                              cookies={"auth_sid": user_credentials["auth_sid"]})
 
         Assertions.assert_json_has_keys(response_after_edit, self.expected_fields)
         email_after_edit = json.loads(response_after_edit.content)["email"]
-        print(f"user_credentials: {user_credentials}")
         assert email_after_edit != user_credentials["email"], \
             f"email {user_credentials["email"]} is not edited"
 
+    @allure.description("This unsuccessfully trys to edit just created user")
     def test_try_edit_another_user(self):
         first_user_data = self.create_user_and_login()
         second_user_data = self.create_user_and_login()
         firstname_for_editing = {"firstName": "EditedFirsName"}
 
         # авторизация первым пользователем
-        self.auth_and_check(
-            first_user_data["user_id"],
-            first_user_data["x-csrf-token"],
-            first_user_data["auth_sid"])
-
+        self.auth_and_check(first_user_data["x-csrf-token"], first_user_data["auth_sid"], first_user_data["user_id"])
         # TRY EDIT BEFORE SECOND USER AUTH
-        print(f"data_for_editing {second_user_data["user_id"]}")
+        #response_edit_400(self, user_credentials, operational_data)
+
         response_edit_first_user = MyRequests.put(
             f"/user/{second_user_data["user_id"]}",
             headers={"x-csrf-token": first_user_data["x-csrf-token"]},
             cookies={"auth_sid": first_user_data["auth_sid"]},
             data=firstname_for_editing
         )
-        Assertions.assert_code_status(response_edit_first_user, 200)
+        Assertions.assert_code_status(response_edit_first_user, 400)
         print(
             f"__response_edit.content__:{response_edit_first_user.content} \n __response_edit.status_code__:{response_edit_first_user.status_code}")
 
         # SECOND USER AUTH
-        self.auth_and_check(
-            second_user_data["user_id"],
-            second_user_data["x-csrf-token"],
-            second_user_data["auth_sid"])
+        self.auth_and_check(second_user_data["x-csrf-token"], second_user_data["auth_sid"], second_user_data["user_id"])
 
         # EDIT
         print(f"data_for_editing {second_user_data["user_id"]}")
@@ -85,7 +82,7 @@ class TestUserEdit(BaseCase):
             data=firstname_for_editing
         )
 
-        Assertions.assert_code_status(response_edit, 200)
+        Assertions.assert_code_status(response_edit, 400)
         print(
             f"__response_edit.content__:{response_edit.content} \n __response_edit.status_code__:{response_edit.status_code}")
 
@@ -101,6 +98,7 @@ class TestUserEdit(BaseCase):
             (f"firstName {second_user_data['firstName']} "
              f"edited to invalid firstName:{firstname_after_edit}")
 
+    @allure.description("This test try to edit just created user email to invalid email")
     def test_edit_just_created_user_invalid_email(self):
         user_credentials = self.create_user_and_auth()
         # EDIT
@@ -110,14 +108,15 @@ class TestUserEdit(BaseCase):
         self.response_edit_400(user_credentials, email_for_editing)
 
         # GET INFO AFTER EDIT
-        response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id_after_check"]}",
-                                             headers={"x-csrf-token": user_credentials["token"]},
+        response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id"]}",
+                                             headers={"x-csrf-token": user_credentials["x-csrf-token"]},
                                              cookies={"auth_sid": user_credentials["auth_sid"]})
 
         Assertions.assert_json_has_keys(response_after_edit, self.expected_fields)
         email_after_edit = json.loads(response_after_edit.content)["email"]
         assert email_after_edit == default_mail, f"email {default_mail} edited to invalid mail:{email_after_edit}"
 
+    @allure.description("This test try to edit just created user firstname to too short email")
     def test_edit_just_created_user_short_firstname(self):
         user_credentials = self.create_user_and_auth()
         default_firstname = user_credentials["firstName"]
@@ -126,20 +125,21 @@ class TestUserEdit(BaseCase):
         self.response_edit_400(user_credentials, firstname_for_editing)
 
         # GET INFO AFTER EDIT
-        response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id_after_check"]}",
-                                             headers={"x-csrf-token": user_credentials["token"]},
+        response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id"]}",
+                                             headers={"x-csrf-token": user_credentials["x-csrf-token"]},
                                              cookies={"auth_sid": user_credentials["auth_sid"]})
 
         Assertions.assert_json_has_keys(response_after_edit, self.expected_fields)
         firstname_after_edit = json.loads(response_after_edit.content)["firstName"]
         assert firstname_after_edit == default_firstname, f"firstname {default_firstname} edited to invalid(short) firstname:{firstname_after_edit}"
 
-    def test_not_authorised_edit_user(self):
+    @allure.description("This test unsuccessfully try to edit not authorised user")
+    def test_edit_not_authorised_user(self):
         user_credentials = self.create_user_and_auth()
         new_data = self.prepare_registration_data()
 
         response_edit = MyRequests.put(
-            f"/user/{user_credentials["user_id_after_check"]}",
+            f"/user/{user_credentials["user_id"]}",
             data=new_data
         )
 
@@ -155,9 +155,7 @@ class TestUserEdit(BaseCase):
             "user_id")
         Assertions.assert_user_login_results(response_login)
 
-        self.auth_and_check(auth_variables["user_id"],
-                            auth_variables["x-csrf-token"],
-                            auth_variables["auth_sid"])
+        self.auth_and_check(auth_variables["x-csrf-token"], auth_variables["auth_sid"], auth_variables["user_id"])
 
         # GET INFO AFTER EDIT
         response_after_edit = MyRequests.get(f"/user/{auth_variables["user_id"]}",
