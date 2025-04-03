@@ -32,7 +32,7 @@ class TestUserEdit(BaseCase):
         )
         Assertions.assert_code_status(response_edit, 200)
 
-    def response_edit_4000(self, user_credentials, operational_data):
+    def response_edit_400(self, user_credentials, operational_data):
         response_edit = MyRequests.put(
             f"/user/{user_credentials["user_id_after_check"]}",
             headers={"x-csrf-token": user_credentials["token"]},
@@ -116,19 +116,9 @@ class TestUserEdit(BaseCase):
         user_credentials= self.create_user_and_auth()
         # EDIT
         default_mail=user_credentials["email"]
-        print(f"default_mail={default_mail}")
-        invalid_mail = "vjjjyashmelexmple.ru"
-        user_credentials["email"] = invalid_mail
+        email_for_editing = {"email": "vjjjyashmelexmple.ru"}
 
-        self.response_edit()
-
-        response_edit = MyRequests.put(
-            f"/user/{user_credentials["user_id_after_check"]}",
-            headers={"x-csrf-token": user_credentials["token"]},
-            cookies={"auth_sid": user_credentials["auth_sid"]},
-            data=user_credentials
-        )
-        Assertions.assert_code_status(response_edit, 400)
+        self.response_edit_400(user_credentials, email_for_editing)
 
         # GET INFO AFTER EDIT
         response_after_edit = MyRequests.get(f"/user/{user_credentials["user_id_after_check"]}",
