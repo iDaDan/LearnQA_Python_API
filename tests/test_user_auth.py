@@ -22,9 +22,7 @@ class TestUserAuth(BaseCase):
         with allure.step(f"вызов метода login c data {data}"):
             response1 = MyRequests.post("/user/login", data=data)
 
-        self.auth_sid = self.get_cookie(response1,"auth_sid")
-        self.token = self.get_header(response1, "x-csrf-token")
-        self.user_id_from_auth_method = self.get_json_value(response1, "user_id")
+        self.auth_variables = self.get_from_response_header_cookie_json(response1,"x-csrf-token","auth_sid","user_id")
 
         Assertions.assert_user_login_results(response1)
 
@@ -39,7 +37,7 @@ class TestUserAuth(BaseCase):
     @allure.description("This test successfully authorize user by x-csrf-token and auth_sid from setup_method")
     def test_auth_user(self):
         #with allure.step("")
-        self.auth_and_check(self.token, self.auth_sid, self.user_id_from_auth_method)
+        self.auth_and_check(self.auth_variables)
 
     @allure.description("This test unsuccessfully authorize user without cookie (token or sid)")
     @pytest.mark.parametrize('condition', exclude_params)
@@ -49,12 +47,12 @@ class TestUserAuth(BaseCase):
         if condition == "no_cookie":
             response2 = MyRequests.get(
                 "/user/auth",
-                headers={"x-csrf-token": self.token}
+                headers={"x-csrf-token": self.auth_variables["x-csrf-token"]}
             )
         else:
             response2 = MyRequests.get(
                 "/user/auth",
-                cookies={"auth_sid": self.auth_sid}
+                cookies={"auth_sid": self.auth_variables["auth_sid"]}
             )
 
         Assertions.assert_json_value_by_name(

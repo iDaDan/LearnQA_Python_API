@@ -7,7 +7,10 @@ from lib.my_requests import MyRequests
 
 @allure.epic("user edit cases")
 class TestUserEdit(BaseCase):
-
+    exclude_params = [
+        (200),
+        (400)
+    ]
     def setup_method(self):
         with allure.step("set expected_fields"):
             self.expected_fields = ["username", "email", "firstName", "lastName"]

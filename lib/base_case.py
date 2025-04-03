@@ -45,23 +45,23 @@ class BaseCase:
             return default_data
 
     @allure.description("user authorisation")
-    def auth_and_check(self, token, auth_sid, user_id: int):
-        with allure.step(f"Authorisation user: {user_id} with token: {token} auth_sid: {auth_sid}"): #str
+    def auth_and_check(self, auth_var):
+        with allure.step(f"Authorisation user: {auth_var["user_id"]} with token: {auth_var["x-csrf-token"]} auth_sid: {auth_var["auth_sid"]}"):
             response2 = MyRequests.get(
                 "/user/auth",
-                headers={"x-csrf-token": token},
-                cookies={"auth_sid": auth_sid}
+                headers={"x-csrf-token": auth_var["x-csrf-token"]},
+                cookies={"auth_sid": auth_var["auth_sid"]}
             ) #int
             print(f"response2: {response2}")
 
             Assertions.assert_json_value_by_name(
-                response2, #int
+                response2,
                 "user_id",
-                user_id, #str
+                auth_var["user_id"],
                 "User id from auth method is not equal to user id from check method"
             )
         with allure.step("getting user_id to check"):
-            response2 = MyRequests.get(f"/user/{user_id}")
+            response2 = MyRequests.get(f"/user/{auth_var["user_id"]}")
             Assertions.assert_code_status(response2, 200)
 
     @allure.description("from response get header, cookie, json_obj_name")
@@ -102,7 +102,7 @@ class BaseCase:
 
         Assertions.assert_user_login_results(response_login)
 
-        self.auth_and_check(auth_vars["x-csrf-token"], auth_vars["auth_sid"], auth_vars["user_id"])
+        self.auth_and_check(auth_vars)
 
         created_data.update(auth_vars)
 
