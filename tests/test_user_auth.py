@@ -32,8 +32,6 @@ class TestUserAuth(BaseCase):
         # чтобы не делать два одинаковых теста с отличием в одну строку
         # она добавляется не в функцию, а отдельно
 
-
-
     @allure.description("This test successfully authorize user by x-csrf-token and auth_sid from setup_method")
     def test_auth_user(self):
         #with allure.step("")

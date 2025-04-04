@@ -63,7 +63,7 @@ class TestUserEdit(BaseCase):
         firstname_for_editing = {"firstName": "EditedFirsName"}
 
         # авторизация первым пользователем
-        self.auth_and_check(first_user_data["x-csrf-token"], first_user_data["auth_sid"], first_user_data["user_id"])
+        self.auth_and_check(first_user_data)
         # TRY EDIT BEFORE SECOND USER AUTH
         #response_edit_400(self, user_credentials, operational_data)
 
@@ -165,7 +165,7 @@ class TestUserEdit(BaseCase):
             "user_id")
         Assertions.assert_user_login_results(response_login)
 
-        self.auth_and_check(auth_variables["x-csrf-token"], auth_variables["auth_sid"], auth_variables["user_id"])
+        self.auth_and_check(auth_variables)
 
         # GET INFO AFTER EDIT
         response_after_edit = MyRequests.get(f"/user/{auth_variables["user_id"]}",

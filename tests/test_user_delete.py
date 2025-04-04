@@ -25,7 +25,7 @@ class TestUserDelete(BaseCase):
 
         Assertions.assert_user_login_results(response_login)
 
-        self.auth_and_check(auth_variables["x-csrf-token"], auth_variables["auth_sid"], auth_variables["user_id"])
+        self.auth_and_check(auth_variables)
 
         #Delete
         response_delete = MyRequests.delete("/user/2",
@@ -54,7 +54,7 @@ class TestUserDelete(BaseCase):
 
         user_data=self.create_user_and_login()
         # LOGIN
-        self.auth_and_check(user_data["x-csrf-token"], user_data["auth_sid"], user_data["user_id"])
+        self.auth_and_check(user_data)
 
         #GET STAT CODE
         response = MyRequests.get(f"/user/{user_data["user_id"]}")
@@ -74,7 +74,7 @@ class TestUserDelete(BaseCase):
         first_user_data = self.create_user_and_login()
         second_user_data = self.create_user_and_login()
 
-        self.auth_and_check(first_user_data["x-csrf-token"], first_user_data["auth_sid"], first_user_data["user_id"])
+        self.auth_and_check(first_user_data)
 
         # GET STAT CODE
         response = MyRequests.get(f"/user/{second_user_data["user_id"]}")

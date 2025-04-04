@@ -69,7 +69,7 @@ class Assertions:
     def assert_code_status(response: Response, expected_status_code):
         #почему не применяем тут try except?
         assert response.status_code == expected_status_code, \
-            f"unexpected status code. Expected {expected_status_code}, Actual {response.status_code}"
+            f"unexpected status code. Expected {expected_status_code}, Actual {response.status_code}, responce content: {response.content}"
 
     @staticmethod
     @allure.description(f"Asserting results of user login")

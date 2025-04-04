@@ -46,6 +46,11 @@ class BaseCase:
 
     @allure.description("user authorisation")
     def auth_and_check(self, auth_var):
+        
+
+        #сюда нужно сразу добавлять респонс и data
+
+
         with allure.step(f"Authorisation user: {auth_var["user_id"]} with token: {auth_var["x-csrf-token"]} auth_sid: {auth_var["auth_sid"]}"):
             response2 = MyRequests.get(
                 "/user/auth",
