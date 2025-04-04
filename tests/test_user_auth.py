@@ -11,7 +11,7 @@ class TestUserAuth(BaseCase):
         ('no_token')
     ]
 
-    @allure.description("This test successfully request post /user/login method and preparing auth_sid, token, user_id_from_auth_method")
+    @allure.description("This method successfully request post /user/login method and preparing auth_sid, token, user_id_from_auth_method")
     def setup_method(self):  # так как мы перенесли данные и ассерты в специальную функцию setup_method(), то к
         # каждой содержащейся в ней переменной нужно добавить "self." слово self здесь обозначает, что переменная
         # является полем класса
@@ -32,11 +32,13 @@ class TestUserAuth(BaseCase):
         # чтобы не делать два одинаковых теста с отличием в одну строку
         # она добавляется не в функцию, а отдельно
 
+    @allure.tag("crit", "auth", "user", "smoke")
     @allure.description("This test successfully authorize user by x-csrf-token and auth_sid from setup_method")
     def test_auth_user(self):
         #with allure.step("")
         self.auth_and_check(self.auth_variables)
 
+    @allure.tag("crit", "auth", "user", "positive")
     @allure.description("This test unsuccessfully authorize user without cookie (token or sid)")
     @pytest.mark.parametrize('condition', exclude_params)
     # здесь мы подключаем exclude_params

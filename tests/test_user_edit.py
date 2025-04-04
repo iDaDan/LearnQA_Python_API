@@ -37,7 +37,7 @@ class TestUserEdit(BaseCase):
         )
         Assertions.assert_code_status(response_edit, 400)
 
-    @allure.tag("positive", "crit")
+    @allure.tag("positive", "crit", "edit", "smoke")
     @allure.description("This test editing just created user")
     def test_edit_just_created_user(self):
         user_credentials = self.create_user_and_auth()
@@ -55,7 +55,7 @@ class TestUserEdit(BaseCase):
         assert email_after_edit != user_credentials["email"], \
             f"email {user_credentials["email"]} is not edited"
 
-    @allure.tag("negative", "crit")
+    @allure.tag("crit", "edit")
     @allure.description("This unsuccessfully try to edit another user")
     def test_try_edit_another_user(self):
         first_user_data = self.create_user_and_login()
@@ -105,7 +105,7 @@ class TestUserEdit(BaseCase):
             (f"firstName {second_user_data['firstName']} "
              f"edited to invalid firstName:{firstname_after_edit}")
 
-    @allure.tag("negative", "medium")
+    @allure.tag("negative", "medium", "edit")
     @allure.description("This test try to edit just created user email to invalid email")
     def test_edit_just_created_user_invalid_email(self):
         user_credentials = self.create_user_and_auth()
@@ -124,7 +124,7 @@ class TestUserEdit(BaseCase):
         email_after_edit = json.loads(response_after_edit.content)["email"]
         assert email_after_edit == default_mail, f"email {default_mail} edited to invalid mail:{email_after_edit}"
 
-    @allure.tag("negative", "medium")
+    @allure.tag("negative", "medium", "edit")
     @allure.description("This test try to edit just created user firstname to too short email")
     def test_edit_just_created_user_short_firstname(self):
         user_credentials = self.create_user_and_auth()
@@ -142,7 +142,7 @@ class TestUserEdit(BaseCase):
         firstname_after_edit = json.loads(response_after_edit.content)["firstName"]
         assert firstname_after_edit == default_firstname, f"firstname {default_firstname} edited to invalid(short) firstname:{firstname_after_edit}"
 
-    @allure.tag("negative", "crit")
+    @allure.tag("negative", "crit", "edit")
     @allure.description("This test unsuccessfully try to edit not authorised user")
     def test_edit_not_authorised_user(self):
         user_credentials = self.create_user_and_auth()

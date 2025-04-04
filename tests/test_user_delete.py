@@ -6,6 +6,7 @@ from lib.my_requests import MyRequests
 @allure.epic("user delete cases")
 class TestUserDelete(BaseCase):
 
+    @allure.tag("deletion","user","special_users")
     @allure.description("this method unsuccessfully deleting user from special list")
     def test_try_delete_special_authorised_user(self):
         data = {
@@ -22,7 +23,6 @@ class TestUserDelete(BaseCase):
                 "auth_sid",
                 "user_id"
             )
-
         Assertions.assert_user_login_results(response_login)
 
         self.auth_and_check(auth_variables)
@@ -49,6 +49,7 @@ class TestUserDelete(BaseCase):
             f"Special User 2 is deleted"
         )
 
+    @allure.tag("deletion", "user", "positive","crit")
     @allure.description("this method successfully deleting authorised user")
     def test_delete_authorised_user(self):
 
@@ -69,6 +70,7 @@ class TestUserDelete(BaseCase):
         response = MyRequests.get(f"/user/{user_data["user_id"]}")
         Assertions.assert_code_status(response,404)
 
+    @allure.tag("deletion", "user", "special_users", "crit")
     @allure.description("this method unsuccessfully try to delete another user")
     def test_try_delete_another_user(self):
         first_user_data = self.create_user_and_login()

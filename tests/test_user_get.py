@@ -1,5 +1,7 @@
 import json
 
+import allure
+
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
@@ -7,6 +9,8 @@ from lib.my_requests import MyRequests
 
 class TestUserGet(BaseCase):
 
+    @allure.description("This test getting data about not auth-ed user")
+    @allure.tag("get", "crit")
     def test_user_details_not_auth(self):
         response = MyRequests.get("/user/2")
 
@@ -15,8 +19,8 @@ class TestUserGet(BaseCase):
         Assertions.assert_json_has_no_key(response, "firstName")
         Assertions.assert_json_has_no_key(response, "lastname")
 
-
-
+    @allure.description("This test getting data about auth-ed user")
+    @allure.tag("get", "user", "crit", "positive", "smoke")
     def test_get_user_details_auth_as_same_user(self):
         data = {
             'email': 'vinkotov@example.com',
@@ -38,6 +42,8 @@ class TestUserGet(BaseCase):
         expected_fields = ["username","email", "firstName", "lastName"]
         Assertions.assert_json_has_keys(response2, expected_fields)
 
+    @allure.description("This test try to get data about other user")
+    @allure.tag("get", "user", "crit")
     def test_get_user_details_auth_as_another_user(self):
         data = {
             'email': 'vinkotov@example.com',
